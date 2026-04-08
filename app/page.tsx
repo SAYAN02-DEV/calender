@@ -11,6 +11,22 @@ const CalendarGrid: React.FC = () => {
   const [year, setYear] = useState(currentDate.getFullYear());
   const [month, setMonth] = useState(currentDate.getMonth() + 1);
 
+  const gridRef = React.useRef<HTMLDivElement>(null);
+  const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 });
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!gridRef.current) return;
+    const rect = gridRef.current.getBoundingClientRect();
+    setMousePos({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setMousePos({ x: -1000, y: -1000 });
+  };
+
   const calendarDays = useMemo(() => {
     const firstDay = getFirstDayOfMonth(year, month);
     const daysInMonth = new Date(year, month, 0).getDate();
@@ -99,11 +115,17 @@ const CalendarGrid: React.FC = () => {
         </button>
       </div>
       <div 
+        ref={gridRef}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(7, 1fr)', 
-          gap: '8px',
-          width: '100%'
+          gap: '1px',
+          width: '100%',
+          backgroundColor: 'transparent',
+          backgroundImage: mousePos.x !== -1000 ? `radial-gradient(circle 120px at ${mousePos.x}px ${mousePos.y}px, rgba(0,0,0,0.3) 0%, transparent 100%)` : 'none',
+          padding: '1px'
         }}
       >
       {daysOfWeek.map((day) => (
@@ -113,7 +135,9 @@ const CalendarGrid: React.FC = () => {
             textAlign: 'center', 
             fontWeight: 'bold', 
             paddingBottom: '8px',
-            color: '#333'
+            paddingTop: '8px',
+            color: '#333',
+            backgroundColor: '#ffffff'
           }}
         >
           {day}
@@ -122,15 +146,9 @@ const CalendarGrid: React.FC = () => {
       {calendarDays.map(({ cellIndex, isCurrentMonthDay, displayDay }) => (
         <div 
           key={cellIndex} 
+          className="flex justify-center items-center min-h-[80px] p-2 cursor-default"
           style={{
-            border: '1px solid #e0e0e0',
-            borderRadius: '4px',
-            minHeight: '80px',
-            padding: '8px',
-            backgroundColor: isCurrentMonthDay ? '#fff' : '#fafafa',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
+            backgroundColor: '#ffffff',
             color: isCurrentMonthDay ? '#333' : '#ccc',
             fontWeight: isCurrentMonthDay ? 'normal' : 'lighter'
           }}
