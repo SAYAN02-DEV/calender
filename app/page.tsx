@@ -12,6 +12,14 @@ export interface CalendarEvent {
   color: string;
 }
 
+export interface RangeEvent {
+  id: string;
+  startDateStr: string;
+  endDateStr: string;
+  title: string;
+  color: string;
+}
+
 export interface Memo {
   id: string;
   month: number;
@@ -29,6 +37,7 @@ const CalendarGrid: React.FC = () => {
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
 
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [rangeEvents, setRangeEvents] = useState<RangeEvent[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   const [memos, setMemos] = useState<Memo[]>([]);
@@ -71,14 +80,23 @@ const CalendarGrid: React.FC = () => {
         console.error('Failed to parse events', e);
       }
     }
+    const storedRange = localStorage.getItem('calendar_range_events_data');
+    if (storedRange) {
+      try {
+        setRangeEvents(JSON.parse(storedRange));
+      } catch (e) {
+        console.error('Failed to parse range events', e);
+      }
+    }
     setIsLoaded(true);
   }, []);
 
   useEffect(() => {
     if (isLoaded) {
       localStorage.setItem('calendar_events_data', JSON.stringify(events));
+      localStorage.setItem('calendar_range_events_data', JSON.stringify(rangeEvents));
     }
-  }, [events, isLoaded]);
+  }, [events, rangeEvents, isLoaded]);
 
   const gridRef = React.useRef<HTMLDivElement>(null);
   const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 });
@@ -147,6 +165,8 @@ const CalendarGrid: React.FC = () => {
           onMouseLeave={handleMouseLeave}
           events={events}
           setEvents={setEvents}
+          rangeEvents={rangeEvents}
+          setRangeEvents={setRangeEvents}
           setMemos={setMemos}
           hoveredLinkedDate={hoveredLinkedDate}
         />

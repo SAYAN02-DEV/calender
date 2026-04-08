@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { getFirstDayOfMonth } from '@/lib';
-import { CalendarEvent, Memo } from '@/app/page';
+import { CalendarEvent, Memo, RangeEvent } from '@/app/page';
 
 interface CalendarProps {
   year: number;
@@ -19,6 +19,8 @@ interface CalendarProps {
   onMouseLeave: () => void;
   events: CalendarEvent[];
   setEvents: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
+  rangeEvents: RangeEvent[];
+  setRangeEvents: React.Dispatch<React.SetStateAction<RangeEvent[]>>;
   setMemos: React.Dispatch<React.SetStateAction<Memo[]>>;
   hoveredLinkedDate: string | null;
 }
@@ -41,69 +43,124 @@ const Calendar: React.FC<CalendarProps> = ({
   onMouseLeave,
   events,
   setEvents,
+  rangeEvents,
+  setRangeEvents,
   setMemos,
   hoveredLinkedDate
 }) => {
   const displayHeaderDate = selection.length === 1 ? selection[0] : new Date();
 
   // Selected date helpers for event form
-  const selectedDate = selection.length === 1 ? selection[0] : null;
-  const selectedDateStr = selectedDate ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}` : null;
+  const isRange = selection.length === 2;
+  const selectedDateStr = selection.length === 1 
+    ? `${selection[0].getFullYear()}-${String(selection[0].getMonth() + 1).padStart(2, '0')}-${String(selection[0].getDate()).padStart(2, '0')}` 
+    : null;
   const existingEvent = selectedDateStr ? events.find(e => e.dateStr === selectedDateStr) : undefined;
+
+  const rangeStartStr = isRange ? `${selection[0].getFullYear()}-${String(selection[0].getMonth() + 1).padStart(2, '0')}-${String(selection[0].getDate()).padStart(2, '0')}` : null;
+  const rangeEndStr = isRange ? `${selection[1].getFullYear()}-${String(selection[1].getMonth() + 1).padStart(2, '0')}-${String(selection[1].getDate()).padStart(2, '0')}` : null;
+  const existingRangeEvent = (rangeStartStr && rangeEndStr) ? rangeEvents.find(re => re.startDateStr === rangeStartStr && re.endDateStr === rangeEndStr) : undefined;
 
   const [eventTitle, setEventTitle] = useState('');
   const [eventColor, setEventColor] = useState('#3b82f6');
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [confirmMemoEvent, setConfirmMemoEvent] = useState<CalendarEvent | RangeEvent | null>(null);
   
   useEffect(() => {
-    if (existingEvent) {
-      setEventTitle(existingEvent.title);
-      setEventColor(existingEvent.color);
+    const ev = existingEvent || existingRangeEvent;
+    if (ev) {
+      setEventTitle(ev.title);
+      setEventColor(ev.color);
     } else {
       setEventTitle('');
       setEventColor('#3b82f6');
     }
-  }, [existingEvent, selectedDateStr]);
+  }, [existingEvent, existingRangeEvent]);
   
   const handleSaveEvent = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedDateStr || !eventTitle.trim()) return;
+    if (!eventTitle.trim()) return;
 
-    if (existingEvent) {
-      // Update
-      setEvents(events.map(ev => ev.id === existingEvent.id ? { ...ev, title: eventTitle, color: eventColor } : ev));
-    } else {
-      // Create
-      const newEvent: CalendarEvent = {
-        id: Date.now().toString(),
-        dateStr: selectedDateStr,
-        title: eventTitle.trim(),
-        color: eventColor
-      };
-      setEvents([...events, newEvent]);
-      
-      // Optionally add to monthly memos
-      const shouldAddMemo = window.confirm(`Would you like to add "${eventTitle.trim()}" to the Monthly Memos?`);
-      if (shouldAddMemo) {
-        const dateObj = new Date(selectedDateStr);
+    if (isRange && rangeStartStr && rangeEndStr) {
+      if (existingRangeEvent) {
+        setRangeEvents(rangeEvents.map(re => re.id === existingRangeEvent.id ? { ...re, title: eventTitle, color: eventColor } : re));
+      } else {
+        const newRangeEvent: RangeEvent = {
+          id: Date.now().toString(),
+          startDateStr: rangeStartStr,
+          endDateStr: rangeEndStr,
+          title: eventTitle.trim(),
+          color: eventColor
+        };
+        setRangeEvents([...rangeEvents, newRangeEvent]);
+        setConfirmMemoEvent(newRangeEvent);
+      }
+    } else if (selectedDateStr) {
+      if (existingEvent) {
+        setEvents(events.map(ev => ev.id === existingEvent.id ? { ...ev, title: eventTitle, color: eventColor } : ev));
+      } else {
+        const newEvent: CalendarEvent = {
+          id: Date.now().toString(),
+          dateStr: selectedDateStr,
+          title: eventTitle.trim(),
+          color: eventColor
+        };
+        setEvents([...events, newEvent]);
+        setConfirmMemoEvent(newEvent);
+      }
+    }
+    setIsEventModalOpen(false);
+  };
+  
+  const handleConfirmAddMemo = (shouldAdd: boolean) => {
+    if (shouldAdd && confirmMemoEvent) {
+      if ('startDateStr' in confirmMemoEvent) { // Is RangeEvent
+        const startObj = new Date(confirmMemoEvent.startDateStr);
+        const endObj = new Date(confirmMemoEvent.endDateStr);
+        
+        let current = new Date(startObj.getFullYear(), startObj.getMonth(), 1);
+        const endLimit = new Date(endObj.getFullYear(), endObj.getMonth(), 1);
+        
+        setMemos((prevMemos: Memo[]) => {
+          const newMemos = [...prevMemos];
+          while (current <= endLimit) {
+            const newMemo: Memo = {
+              id: Date.now().toString() + '_' + current.getTime(),
+              month: current.getMonth() + 1,
+              year: current.getFullYear(),
+              title: confirmMemoEvent.title.toUpperCase(),
+              description: `Range event from ${startObj.toLocaleDateString()} to ${endObj.toLocaleDateString()}.`,
+              linkedDateStr: `${confirmMemoEvent.startDateStr}|${confirmMemoEvent.endDateStr}`
+            };
+            newMemos.push(newMemo);
+            current.setMonth(current.getMonth() + 1);
+          }
+          return newMemos;
+        });
+      } else {
+        const dateObj = new Date(confirmMemoEvent.dateStr);
         const newMemo: Memo = {
           id: Date.now().toString() + '_memo',
           month: dateObj.getMonth() + 1,
           year: dateObj.getFullYear(),
-          title: eventTitle.trim().toUpperCase(),
+          title: confirmMemoEvent.title.toUpperCase(),
           description: `Event scheduled for ${dateObj.toLocaleDateString()}.`,
-          linkedDateStr: selectedDateStr
+          linkedDateStr: confirmMemoEvent.dateStr
         };
         setMemos((prevMemos: Memo[]) => {
           return [...prevMemos, newMemo];
         });
       }
     }
-    setIsEventModalOpen(false);
+    setConfirmMemoEvent(null);
   };
 
   const handleDeleteEvent = () => {
-    if (existingEvent) {
+    if (existingRangeEvent) {
+      setRangeEvents(rangeEvents.filter(re => re.id !== existingRangeEvent.id));
+      setEventTitle('');
+      setEventColor('#3b82f6');
+    } else if (existingEvent) {
       setEvents(events.filter(ev => ev.id !== existingEvent.id));
       setEventTitle('');
       setEventColor('#3b82f6');
@@ -264,57 +321,84 @@ const Calendar: React.FC<CalendarProps> = ({
           
           const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
           const dayEvent = events.find(e => e.dateStr === dateStr);
-          const isLinkedHovered = hoveredLinkedDate === dateStr;
+          
+          const dateTime = date.getTime();
+
+          let isLinkedHovered = false;
+          if (hoveredLinkedDate) {
+            if (hoveredLinkedDate.includes('|')) {
+              const [startStr, endStr] = hoveredLinkedDate.split('|');
+              const start = new Date(startStr).setTime(new Date(startStr).getTime() - 1000);
+              const end = new Date(endStr).getTime() + 86400000;
+              isLinkedHovered = dateTime > start && dateTime < end;
+            } else {
+              isLinkedHovered = hoveredLinkedDate === dateStr;
+            }
+          }
+
+          const rangeEvent = rangeEvents.find(re => {
+            const start = new Date(re.startDateStr).setTime(new Date(re.startDateStr).getTime() - 1000); // buffer
+            const end = new Date(re.endDateStr).getTime() + 86400000;
+            return dateTime > start && dateTime < end;
+          });
 
           // Priority for background: Event color -> Selection -> Range -> Default
-          const cellBackground = dayEvent ? dayEvent.color : isSel ? '#114232' : inRange ? '#ecece8' : '#f8f9f7';
-          const cellColor = (dayEvent || isSel) ? '#ffffff' : !isCurrentMonthDay ? '#d1d1d1' : '#555';
+          const activeEventColor = dayEvent ? dayEvent.color : (rangeEvent && !isSel) ? rangeEvent.color : undefined;
+          const cellBackground = activeEventColor ? activeEventColor : isSel ? '#114232' : inRange ? '#ecece8' : '#f8f9f7';
+          const cellColor = (activeEventColor || isSel) ? '#ffffff' : !isCurrentMonthDay ? '#d1d1d1' : '#555';
+
+          const activeEvent = dayEvent || rangeEvent;
 
           return (
             <div 
               key={cellIndex} 
               onClick={() => handleDateClick(date)}
               onMouseEnter={() => setHoveredDate(date)}
-              className={`group flex flex-col justify-center items-center min-h-[70px] p-2 cursor-pointer transition-all duration-300 relative ${isSel ? 'ring-2 ring-offset-2 ring-[#B49B57] z-10 rounded-xl shadow-md' : 'rounded-lg'} ${dayEvent ? 'hover:scale-[1.3] hover:z-50 hover:shadow-2xl' : ''}`}
+              className={`group flex flex-col justify-center items-center min-h-[70px] p-2 cursor-pointer transition-all duration-300 relative ${isSel ? 'ring-2 ring-offset-2 ring-[#B49B57] z-10 rounded-xl shadow-md' : 'rounded-lg'} ${activeEvent ? 'hover:scale-[1.3] hover:z-50 hover:shadow-2xl' : ''}`}
               style={{
                 backgroundColor: cellBackground,
                 color: cellColor,
-                fontWeight: isSel || inRange || dayEvent ? '700' : isCurrentMonthDay ? '400' : '300',
+                fontWeight: isSel || inRange || activeEvent ? '700' : isCurrentMonthDay ? '400' : '300',
                 opacity: isSel || isCurrentMonthDay ? 1 : 0.6,
-                transform: isLinkedHovered ? 'scale(1.3)' : !dayEvent && isSel ? 'scale(1.05)' : undefined,
+                transform: isLinkedHovered ? 'scale(1.3)' : !activeEvent && isSel ? 'scale(1.05)' : undefined,
                 zIndex: isLinkedHovered ? 50 : undefined,
                 boxShadow: isLinkedHovered ? '0 25px 50px -12px rgba(0, 0, 0, 0.25)' : undefined
               }}
             >
-              <span className={dayEvent || isLinkedHovered ? "group-hover:-translate-y-2 transition-transform duration-300" : ""}>
+              <span className={activeEvent || isLinkedHovered ? "group-hover:-translate-y-2 transition-transform duration-300" : ""}>
                 {String(displayDay).padStart(2, '0')}
               </span>
               
-              {dayEvent && (
+              {activeEvent && (
                 <>
                   <div className={`absolute bottom-1.5 w-1.5 h-1.5 rounded-full bg-white opacity-70 group-hover:opacity-0 transition-opacity duration-300 ${isLinkedHovered ? 'opacity-0' : ''}`} />
                   
                   <div className={`absolute inset-x-1 bottom-1.5 overflow-hidden group-hover:opacity-100 transition-opacity duration-300 pointer-events-none fade-edges ${isLinkedHovered ? 'opacity-100' : 'opacity-0'}`}>
                     <div className="text-[8px] font-bold tracking-wider text-white whitespace-nowrap px-1">
-                      {dayEvent.title.length > 8 ? (
+                      {activeEvent.title.length > 8 ? (
                         <div className="animate-marquee inline-block">
-                          {dayEvent.title} <span className="px-3">•</span> {dayEvent.title}
+                          {activeEvent.title} <span className="px-3">•</span> {activeEvent.title}
                         </div>
                       ) : (
-                        <div className="truncate text-center w-full">{dayEvent.title}</div>
+                        <div className="truncate text-center w-full">{activeEvent.title}</div>
                       )}
                     </div>
                   </div>
                 </>
               )}
 
-              {/* Plust Button for Event Modal shown on hover or when date is selected */}
+              {/* Add Button for Event Modal */}
               <button
-                className={`absolute top-1 right-1 w-4 h-4 rounded-full bg-white text-[#114232] flex items-center justify-center shadow-sm hover:scale-110 z-20 transition-all duration-200 ${isSel && selection.length === 1 ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                className={`absolute top-1 right-1 w-4 h-4 rounded-full bg-white text-[#114232] flex items-center justify-center shadow-sm hover:scale-110 z-20 transition-all duration-200 ${
+                  (isSel && selection.length === 1 && selection[0].getTime() === date.getTime()) || 
+                  (isSel && selection.length === 2 && selection[1].getTime() === date.getTime()) 
+                    ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                }`}
                 onClick={(e) => { 
                   e.stopPropagation(); 
-                  if (!(isSel && selection.length === 1)) {
-                    setSelection([date]); // explicitly select this hovered date
+                  const isRangeEndSelected = isSel && selection.length === 2 && selection[1].getTime() === date.getTime();
+                  if (!isRangeEndSelected && !(isSel && selection.length === 1)) {
+                    setSelection([date]); // explicitly select this single date
                   }
                   setIsEventModalOpen(true); 
                 }}
@@ -330,13 +414,15 @@ const Calendar: React.FC<CalendarProps> = ({
       </div>
 
       {/* Floating Event Modal (Z-Index Top) */}
-      {isEventModalOpen && selectedDateStr && (
+      {isEventModalOpen && (selectedDateStr || (rangeStartStr && rangeEndStr)) && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
           <div className="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-sm animate-in fade-in zoom-in-95 duration-200">
             <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider flex justify-between items-center mb-6">
-              {existingEvent ? 'Edit Event' : 'Add Event'}
+              {isRange ? (existingRangeEvent ? 'Edit Range Event' : 'Add Range Event') : (existingEvent ? 'Edit Event' : 'Add Event')}
               <span className="text-[#396253] text-[10px]">
-                {selectedDate!.toLocaleDateString('default', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
+                {isRange && rangeStartStr && rangeEndStr
+                  ? `${new Date(rangeStartStr).toLocaleDateString('default', { month: 'short', day: 'numeric', year: 'numeric' })} - ${new Date(rangeEndStr).toLocaleDateString('default', { month: 'short', day: 'numeric', year: 'numeric' })}`
+                  : (selectedDate || new Date()).toLocaleDateString('default', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
               </span>
             </h3>
             
@@ -362,7 +448,7 @@ const Calendar: React.FC<CalendarProps> = ({
               </div>
               
               <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-gray-100">
-                {existingEvent ? (
+                {(isRange ? existingRangeEvent : existingEvent) ? (
                   <>
                     <button 
                       type="button" 
@@ -393,10 +479,41 @@ const Calendar: React.FC<CalendarProps> = ({
                   type="submit" 
                   className="text-xs text-white bg-[#114232] hover:bg-[#0a291f] font-semibold px-6 py-2 rounded-lg transition-colors shadow-md hover:shadow-lg"
                 >
-                  {existingEvent ? 'Update' : 'Save'}
+                  {(isRange ? existingRangeEvent : existingEvent) ? 'Update' : 'Save'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Memo Dialog */}
+      {confirmMemoEvent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div 
+            className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm animate-in zoom-in-95 duration-200"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="text-xl font-serif italic text-[#396253] mb-3">Add to Memos?</h3>
+            <p className="text-sm text-gray-600 mb-6">
+              Would you like to add <span className="font-bold text-gray-800">"{confirmMemoEvent.title}"</span> to the Monthly Memos?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button 
+                type="button" 
+                onClick={() => handleConfirmAddMemo(false)} 
+                className="text-xs text-gray-600 hover:text-gray-800 px-5 py-2.5 font-semibold transition-colors bg-gray-100 hover:bg-gray-200 rounded-xl"
+              >
+                No, skip
+              </button>
+              <button 
+                type="button" 
+                onClick={() => handleConfirmAddMemo(true)}
+                className="text-xs text-white bg-[#114232] hover:bg-[#0a291f] font-semibold px-6 py-2.5 rounded-xl transition-colors shadow-md hover:shadow-lg"
+              >
+                Yes, add it
+              </button>
+            </div>
           </div>
         </div>
       )}
