@@ -133,11 +133,11 @@ const CalendarGrid: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto my-10 p-6 grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 font-sans bg-white">
+    <div className="w-full max-w-6xl mx-auto my-10 p-6 md:p-10 grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 font-sans bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20">
       
       {/* Left Column: Hero & Memos */}
       <div className="flex flex-col gap-8 md:col-span-5 md:col-start-1 md:row-start-1">
-        <HeroImage />
+        <HeroImage month={month} />
         <MonthlyMemos 
           month={month} 
           year={year} 

@@ -112,7 +112,7 @@ const Calendar: React.FC<CalendarProps> = ({
     }
     setIsEventModalOpen(false);
   };
-  
+
   const handleConfirmAddMemo = (shouldAdd: boolean) => {
     if (shouldAdd && confirmMemoEvent) {
       if ('startDateStr' in confirmMemoEvent) { // Is RangeEvent
@@ -400,7 +400,15 @@ const Calendar: React.FC<CalendarProps> = ({
                 onClick={(e) => { 
                   e.stopPropagation(); 
                   const isRangeEndSelected = isSel && selection.length === 2 && selection[1].getTime() === date.getTime();
-                  if (!isRangeEndSelected && !(isSel && selection.length === 1)) {
+                  
+                  if (rangeEvent && dateStr === rangeEvent.endDateStr) {
+                    const startParts = rangeEvent.startDateStr.split('-');
+                    const endParts = rangeEvent.endDateStr.split('-');
+                    setSelection([
+                      new Date(Number(startParts[0]), Number(startParts[1]) - 1, Number(startParts[2])),
+                      new Date(Number(endParts[0]), Number(endParts[1]) - 1, Number(endParts[2]))
+                    ]);
+                  } else if (!isRangeEndSelected && !(isSel && selection.length === 1)) {
                     setSelection([date]); // explicitly select this single date
                   }
                   setIsEventModalOpen(true); 
