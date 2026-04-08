@@ -49,8 +49,8 @@ const Calendar: React.FC<CalendarProps> = ({
 
   const [eventTitle, setEventTitle] = useState('');
   const [eventColor, setEventColor] = useState('#3b82f6');
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   
-  // When selection changes, update the form to match any existing event
   useEffect(() => {
     if (existingEvent) {
       setEventTitle(existingEvent.title);
@@ -78,6 +78,7 @@ const Calendar: React.FC<CalendarProps> = ({
       };
       setEvents([...events, newEvent]);
     }
+    setIsEventModalOpen(false);
   };
 
   const handleDeleteEvent = () => {
@@ -86,6 +87,7 @@ const Calendar: React.FC<CalendarProps> = ({
       setEventTitle('');
       setEventColor('#3b82f6');
     }
+    setIsEventModalOpen(false);
   };
 
   const handleDateClick = (date: Date) => {
@@ -251,7 +253,7 @@ const Calendar: React.FC<CalendarProps> = ({
               key={cellIndex} 
               onClick={() => handleDateClick(date)}
               onMouseEnter={() => setHoveredDate(date)}
-              className={`flex flex-col justify-center items-center min-h-[70px] p-2 cursor-pointer transition-all duration-300 relative ${isSel ? 'ring-2 ring-offset-2 ring-[#B49B57] z-10 rounded-xl shadow-md' : 'rounded-lg'} ${dayEvent ? 'hover:scale-[1.3] hover:z-50 hover:shadow-2xl group' : ''}`}
+              className={`group flex flex-col justify-center items-center min-h-[70px] p-2 cursor-pointer transition-all duration-300 relative ${isSel ? 'ring-2 ring-offset-2 ring-[#B49B57] z-10 rounded-xl shadow-md' : 'rounded-lg'} ${dayEvent ? 'hover:scale-[1.3] hover:z-50 hover:shadow-2xl' : ''}`}
               style={{
                 backgroundColor: cellBackground,
                 color: cellColor,
@@ -281,59 +283,97 @@ const Calendar: React.FC<CalendarProps> = ({
                   </div>
                 </>
               )}
+
+              {/* Plust Button for Event Modal shown on hover or when date is selected */}
+              <button
+                className={`absolute top-1 right-1 w-4 h-4 rounded-full bg-white text-[#114232] flex items-center justify-center shadow-sm hover:scale-110 z-20 transition-all duration-200 ${isSel && selection.length === 1 ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  if (!(isSel && selection.length === 1)) {
+                    setSelection([date]); // explicitly select this hovered date
+                  }
+                  setIsEventModalOpen(true); 
+                }}
+                title="Add or Edit Event"
+              >
+                <svg fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-[10px] h-[10px]">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+              </button>
             </div>
           );
         })}
       </div>
 
-      {/* Inline Event Adder for Selected Date */}
-      {selection.length === 1 && selectedDateStr && (
-        <div className="mt-8 p-6 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider flex justify-between items-center">
-            {existingEvent ? 'Edit Event' : 'Add Event'}
-            <span className="text-[#396253] text-[10px]">
-              {selectedDate!.toLocaleDateString('default', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
-            </span>
-          </h3>
-          
-          <form onSubmit={handleSaveEvent} className="flex flex-col gap-4">
-            <div className="flex items-center gap-3">
-              <input 
-                type="text" 
-                placeholder="Event Title..." 
-                className="flex-1 text-sm font-semibold text-gray-800 border-b border-gray-300 py-1.5 bg-transparent placeholder-gray-400 focus:outline-none focus:border-[#396253]"
-                value={eventTitle}
-                onChange={e => setEventTitle(e.target.value)}
-                required
-              />
-              <input
-                type="color"
-                value={eventColor}
-                onChange={e => setEventColor(e.target.value)}
-                className="w-10 h-10 border-0 p-0 cursor-pointer rounded-full overflow-hidden"
-                style={{ backgroundColor: 'transparent' }}
-                title="Choose event color"
-              />
-            </div>
+      {/* Floating Event Modal (Z-Index Top) */}
+      {isEventModalOpen && selectedDateStr && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+          <div className="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-sm animate-in fade-in zoom-in-95 duration-200">
+            <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider flex justify-between items-center mb-6">
+              {existingEvent ? 'Edit Event' : 'Add Event'}
+              <span className="text-[#396253] text-[10px]">
+                {selectedDate!.toLocaleDateString('default', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
+              </span>
+            </h3>
             
-            <div className="flex justify-end gap-2 mt-2">
-              {existingEvent && (
+            <form onSubmit={handleSaveEvent} className="flex flex-col gap-5">
+              <div className="flex items-center gap-3 bg-[#f8f9f7] p-2 rounded-xl border border-gray-100">
+                <input 
+                  type="text" 
+                  placeholder="Event Title..." 
+                  className="flex-1 text-sm font-semibold text-gray-800 border-none px-3 bg-transparent placeholder-gray-400 focus:outline-none"
+                  value={eventTitle}
+                  onChange={e => setEventTitle(e.target.value)}
+                  autoFocus
+                  required
+                />
+                <input
+                  type="color"
+                  value={eventColor}
+                  onChange={e => setEventColor(e.target.value)}
+                  className="w-8 h-8 border-0 p-0 cursor-pointer rounded-full overflow-hidden mr-1"
+                  style={{ backgroundColor: 'transparent' }}
+                  title="Choose event color"
+                />
+              </div>
+              
+              <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-gray-100">
+                {existingEvent ? (
+                  <>
+                    <button 
+                      type="button" 
+                      onClick={handleDeleteEvent} 
+                      className="text-xs text-red-500 hover:text-red-700 px-4 py-2 font-semibold transition-colors bg-red-50 hover:bg-red-100 rounded-lg mr-auto"
+                    >
+                      Delete
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => setIsEventModalOpen(false)} 
+                      className="text-xs text-gray-600 hover:text-gray-800 px-4 py-2 font-semibold transition-colors hover:bg-gray-100 rounded-lg"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <button 
+                    type="button" 
+                    onClick={() => setIsEventModalOpen(false)} 
+                    className="text-xs text-gray-600 hover:text-gray-800 px-4 py-2 font-semibold transition-colors bg-gray-50 hover:bg-gray-100 rounded-lg mr-auto"
+                  >
+                    Cancel
+                  </button>
+                )}
+                
                 <button 
-                  type="button" 
-                  onClick={handleDeleteEvent} 
-                  className="text-xs text-red-500 hover:text-red-700 px-3 py-1.5 font-semibold transition-colors bg-red-50 hover:bg-red-100 rounded-lg mr-auto"
+                  type="submit" 
+                  className="text-xs text-white bg-[#114232] hover:bg-[#0a291f] font-semibold px-6 py-2 rounded-lg transition-colors shadow-md hover:shadow-lg"
                 >
-                  Delete
+                  {existingEvent ? 'Update' : 'Save'}
                 </button>
-              )}
-              <button 
-                type="submit" 
-                className="text-xs text-white bg-[#114232] hover:bg-[#0a291f] font-semibold px-5 py-2 rounded-lg transition-colors shadow-sm"
-              >
-                {existingEvent ? 'Update' : 'Save Event'}
-              </button>
-            </div>
-          </form>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

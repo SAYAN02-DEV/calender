@@ -7,7 +7,7 @@ import HeroImage from '@/components/HeroImage';
 
 export interface CalendarEvent {
   id: string;
-  dateStr: string; // YYYY-MM-DD
+  dateStr: string;
   title: string;
   color: string;
 }
