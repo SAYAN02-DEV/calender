@@ -11,6 +11,9 @@ const CalendarGrid: React.FC = () => {
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const gridCells = Array.from({ length: 42 }, (_, index) => index);
 
+  const firstDay = getFirstDayOfMonth(year, month);
+  const daysInMonth = new Date(year, month, 0).getDate();
+
   return (
     <div style={{ maxWidth: '800px', margin: '20px auto', fontFamily: 'sans-serif' }}>
       <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px' }}>
@@ -53,24 +56,30 @@ const CalendarGrid: React.FC = () => {
           {day}
         </div>
       ))}
-      {gridCells.map((cellIndex) => (
-        <div 
-          key={cellIndex} 
-          style={{
-            border: '1px solid #e0e0e0',
-            borderRadius: '4px',
-            minHeight: '80px',
-            padding: '8px',
-            backgroundColor: '#fafafa',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            color: '#888'
-          }}
-        >
-          {cellIndex + 1}
-        </div>
-      ))}
+      {gridCells.map((cellIndex) => {
+        const dayNumber = cellIndex - firstDay + 1;
+        const isCurrentMonthDay = dayNumber > 0 && dayNumber <= daysInMonth;
+
+        return (
+          <div 
+            key={cellIndex} 
+            style={{
+              border: '1px solid #e0e0e0',
+              borderRadius: '4px',
+              minHeight: '80px',
+              padding: '8px',
+              backgroundColor: isCurrentMonthDay ? '#fff' : '#fafafa',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              color: isCurrentMonthDay ? '#333' : 'transparent',
+              fontWeight: isCurrentMonthDay ? 'normal' : 'lighter'
+            }}
+          >
+            {isCurrentMonthDay ? dayNumber : ''}
+          </div>
+        );
+      })}
     </div>
     </div>
   );
