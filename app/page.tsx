@@ -1,19 +1,37 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { getFirstDayOfMonth } from '@/lib';
+
+const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const gridCells = Array.from({ length: 42 }, (_, index) => index);
 
 const CalendarGrid: React.FC = () => {
   const currentDate = new Date();
   const [year, setYear] = useState(currentDate.getFullYear());
   const [month, setMonth] = useState(currentDate.getMonth() + 1);
 
-  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const gridCells = Array.from({ length: 42 }, (_, index) => index);
+  const calendarDays = useMemo(() => {
+    const firstDay = getFirstDayOfMonth(year, month);
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const daysInPrevMonth = new Date(year, month - 1, 0).getDate();
 
-  const firstDay = getFirstDayOfMonth(year, month);
-  const daysInMonth = new Date(year, month, 0).getDate();
-  const daysInPrevMonth = new Date(year, month - 1, 0).getDate();
+    return gridCells.map((cellIndex) => {
+      const dayNumber = cellIndex - firstDay + 1;
+      const isCurrentMonthDay = dayNumber > 0 && dayNumber <= daysInMonth;
+
+      let displayDay: number;
+      if (dayNumber <= 0) {
+        displayDay = daysInPrevMonth + dayNumber;
+      } else if (dayNumber > daysInMonth) {
+        displayDay = dayNumber - daysInMonth;
+      } else {
+        displayDay = dayNumber;
+      }
+
+      return { cellIndex, isCurrentMonthDay, displayDay };
+    });
+  }, [year, month]);
 
   const handlePrevMonth = () => {
     if (month === 1) {
@@ -87,39 +105,25 @@ const CalendarGrid: React.FC = () => {
           {day}
         </div>
       ))}
-      {gridCells.map((cellIndex) => {
-        const dayNumber = cellIndex - firstDay + 1;
-        const isCurrentMonthDay = dayNumber > 0 && dayNumber <= daysInMonth;
-
-        let displayDay: number;
-        if (dayNumber <= 0) {
-          displayDay = daysInPrevMonth + dayNumber;
-        } else if (dayNumber > daysInMonth) {
-          displayDay = dayNumber - daysInMonth;
-        } else {
-          displayDay = dayNumber;
-        }
-
-        return (
-          <div 
-            key={cellIndex} 
-            style={{
-              border: '1px solid #e0e0e0',
-              borderRadius: '4px',
-              minHeight: '80px',
-              padding: '8px',
-              backgroundColor: isCurrentMonthDay ? '#fff' : '#fafafa',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              color: isCurrentMonthDay ? '#333' : '#ccc',
-              fontWeight: isCurrentMonthDay ? 'normal' : 'lighter'
-            }}
-          >
-            {displayDay}
-          </div>
-        );
-      })}
+      {calendarDays.map(({ cellIndex, isCurrentMonthDay, displayDay }) => (
+        <div 
+          key={cellIndex} 
+          style={{
+            border: '1px solid #e0e0e0',
+            borderRadius: '4px',
+            minHeight: '80px',
+            padding: '8px',
+            backgroundColor: isCurrentMonthDay ? '#fff' : '#fafafa',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: isCurrentMonthDay ? '#333' : '#ccc',
+            fontWeight: isCurrentMonthDay ? 'normal' : 'lighter'
+          }}
+        >
+          {displayDay}
+        </div>
+      ))}
     </div>
     </div>
   );
