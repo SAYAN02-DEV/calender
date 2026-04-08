@@ -159,10 +159,13 @@ const Calendar: React.FC<CalendarProps> = ({
   const handleDeleteEvent = () => {
     if (existingRangeEvent) {
       setRangeEvents(rangeEvents.filter(re => re.id !== existingRangeEvent.id));
+      const targetLinkedStr = `${existingRangeEvent.startDateStr}|${existingRangeEvent.endDateStr}`;
+      setMemos(prev => prev.filter(m => m.linkedDateStr !== targetLinkedStr));
       setEventTitle('');
       setEventColor('#3b82f6');
     } else if (existingEvent) {
       setEvents(events.filter(ev => ev.id !== existingEvent.id));
+      setMemos(prev => prev.filter(m => m.linkedDateStr !== existingEvent.dateStr));
       setEventTitle('');
       setEventColor('#3b82f6');
     }
