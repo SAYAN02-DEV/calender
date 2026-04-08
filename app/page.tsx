@@ -1,4 +1,5 @@
 import React from 'react';
+import { getFirstDayOfMonth } from '@/lib';
 
 const CalendarGrid: React.FC = () => {
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
