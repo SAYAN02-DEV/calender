@@ -78,7 +78,7 @@ const MonthlyMemos: React.FC<MonthlyMemosProps> = ({ month, year }) => {
   const currentMemos = memos.filter(m => m.month === month && m.year === year);
 
   return (
-    <div className="px-2 md:col-span-5 md:col-start-1 md:row-start-2">
+    <div className="px-2 w-full">
       <h2 className="text-2xl font-serif italic text-[#396253] mb-6 border-b border-gray-200 pb-2 flex justify-between items-baseline">
         Monthly Memos
         <div className="flex items-center gap-3">
@@ -105,7 +105,7 @@ const MonthlyMemos: React.FC<MonthlyMemosProps> = ({ month, year }) => {
       </h2>
 
       {isAdding && (
-        <form onSubmit={handleAddMemo} className="mb-6 p-4 bg-[#f8f9f7] rounded-xl border border-gray-200 flex flex-col gap-3 shadow-inner">
+        <form onSubmit={handleAddMemo} className="mb-6 p-4 bg-[#f8f9f7] rounded-xl border border-gray-200 flex flex-col gap-3 shadow-inner shrink-0">
           <input 
             type="text" 
             placeholder="Memo Title (e.g. PRUNING RITUAL)" 
@@ -130,7 +130,7 @@ const MonthlyMemos: React.FC<MonthlyMemosProps> = ({ month, year }) => {
         </form>
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-6 overflow-y-auto pr-2 custom-scrollbar" style={{ maxHeight: '350px' }}>
         {currentMemos.length > 0 ? (
           currentMemos.map((memo) => (
             <div key={memo.id} className="group relative">

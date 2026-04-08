@@ -109,22 +109,29 @@ const CalendarGrid: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto my-10 p-6 grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 font-sans bg-white">
+    <div className="w-full max-w-6xl mx-auto my-10 p-6 grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 font-sans bg-white">
       
-      {/* Hero Image */}
-      <div 
-        className="w-full rounded-3xl overflow-hidden bg-gray-200 shadow-sm md:col-span-5 md:col-start-1 md:row-start-1 h-48 md:h-[400px] xl:h-[500px]"
-      >
-        <img 
-          src="https://images.unsplash.com/photo-1542385151-efd9000785a0?q=80&w=800&auto=format&fit=crop"
-          alt="Calendar Hero"
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-        />
+      {/* Left Column: Hero & Memos */}
+      <div className="flex flex-col gap-8 md:col-span-5 md:col-start-1 md:row-start-1">
+        
+        {/* Hero Image */}
+        <div 
+          className="w-full rounded-3xl overflow-hidden bg-gray-200 shadow-sm h-48 md:h-[400px] xl:h-[500px]"
+        >
+          <img 
+            src="https://images.unsplash.com/photo-1542385151-efd9000785a0?q=80&w=800&auto=format&fit=crop"
+            alt="Calendar Hero"
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        </div>
+
+        {/* Monthly Memos Layout Block */}
+        <MonthlyMemos month={month} year={year} />
       </div>
 
       {/* Calendar Section */}
       <div className="w-full bg-[#f8f9f7] p-8 md:p-12 rounded-3xl shadow-sm border border-gray-100 md:col-span-7 md:col-start-6 md:row-start-1 md:row-span-2 self-start">
-        <div className="flex justify-between items-end mb-12 px-2">
+        <div className="flex justify-between items-end mb-6 px-2">
           <div className="flex items-baseline gap-4">
             <div className="text-[5.5rem] font-serif text-[#114232] leading-none tracking-tight" style={{ fontFamily: 'Georgia, serif' }}>
               {String(displayHeaderDate.getDate()).padStart(2, '0')}
@@ -160,13 +167,20 @@ const CalendarGrid: React.FC = () => {
             </button>
           </div>
         </div>
+
+        <div className="px-2 mb-4 text-center pb-2">
+          <span className="text-sm font-bold tracking-widest text-[#396253] uppercase bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100">
+            {new Date(year, month - 1).toLocaleString('default', { month: 'long' })} {year}
+          </span>
+        </div>
+
       <div 
         ref={gridRef}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(7, 1fr)', 
+          gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', 
           gap: '1px',
           width: '100%',
           backgroundColor: 'transparent',
@@ -216,8 +230,6 @@ const CalendarGrid: React.FC = () => {
       </div>
     </div>
     
-      {/* Monthly Memos Layout Block */}
-      <MonthlyMemos month={month} year={year} />
     </div>
   );
 };
