@@ -1,22 +1,45 @@
-import React from 'react';
+"use client";
+
+import React, { useState } from 'react';
 import { getFirstDayOfMonth } from '@/lib';
 
 const CalendarGrid: React.FC = () => {
+  const currentDate = new Date();
+  const [year, setYear] = useState(currentDate.getFullYear());
+  const [month, setMonth] = useState(currentDate.getMonth() + 1);
+
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const gridCells = Array.from({ length: 42 }, (_, index) => index);
 
   return (
-    <div 
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(7, 1fr)', 
-        gap: '8px',
-        width: '100%',
-        maxWidth: '800px',
-        margin: '20px auto',
-        fontFamily: 'sans-serif'
-      }}
-    >
+    <div style={{ maxWidth: '800px', margin: '20px auto', fontFamily: 'sans-serif' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px' }}>
+        <select 
+          value={month} 
+          onChange={(e) => setMonth(Number(e.target.value))}
+          style={{ padding: '8px', fontSize: '16px' }}
+        >
+          {Array.from({ length: 12 }, (_, i) => (
+            <option key={i + 1} value={i + 1}>
+              {new Date(0, i).toLocaleString('default', { month: 'long' })}
+            </option>
+          ))}
+        </select>
+        <input 
+          type="number" 
+          value={year} 
+          onChange={(e) => setYear(Number(e.target.value))}
+          style={{ padding: '8px', fontSize: '16px', width: '100px' }}
+        />
+      </div>
+      <div 
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(7, 1fr)', 
+          gap: '8px',
+          width: '100%'
+        }}
+      >
       {daysOfWeek.map((day) => (
         <div 
           key={day} 
@@ -48,6 +71,7 @@ const CalendarGrid: React.FC = () => {
           {cellIndex + 1}
         </div>
       ))}
+    </div>
     </div>
   );
 };
