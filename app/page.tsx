@@ -1,65 +1,98 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState } from 'react';
+import { getFirstDayOfMonth } from '@/lib';
+
+const CalendarGrid: React.FC = () => {
+  const currentDate = new Date();
+  const [year, setYear] = useState(currentDate.getFullYear());
+  const [month, setMonth] = useState(currentDate.getMonth() + 1);
+
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const gridCells = Array.from({ length: 42 }, (_, index) => index);
+
+  const firstDay = getFirstDayOfMonth(year, month);
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const daysInPrevMonth = new Date(year, month - 1, 0).getDate();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div style={{ maxWidth: '800px', margin: '20px auto', fontFamily: 'sans-serif' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px' }}>
+        <select 
+          value={month} 
+          onChange={(e) => setMonth(Number(e.target.value))}
+          style={{ padding: '8px', fontSize: '16px' }}
+        >
+          {Array.from({ length: 12 }, (_, i) => (
+            <option key={i + 1} value={i + 1}>
+              {new Date(0, i).toLocaleString('default', { month: 'long' })}
+            </option>
+          ))}
+        </select>
+        <input 
+          type="number" 
+          value={year} 
+          onChange={(e) => setYear(Number(e.target.value))}
+          style={{ padding: '8px', fontSize: '16px', width: '100px' }}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+      </div>
+      <div 
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(7, 1fr)', 
+          gap: '8px',
+          width: '100%'
+        }}
+      >
+      {daysOfWeek.map((day) => (
+        <div 
+          key={day} 
+          style={{ 
+            textAlign: 'center', 
+            fontWeight: 'bold', 
+            paddingBottom: '8px',
+            color: '#333'
+          }}
+        >
+          {day}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      ))}
+      {gridCells.map((cellIndex) => {
+        const dayNumber = cellIndex - firstDay + 1;
+        const isCurrentMonthDay = dayNumber > 0 && dayNumber <= daysInMonth;
+
+        let displayDay: number;
+        if (dayNumber <= 0) {
+          displayDay = daysInPrevMonth + dayNumber;
+        } else if (dayNumber > daysInMonth) {
+          displayDay = dayNumber - daysInMonth;
+        } else {
+          displayDay = dayNumber;
+        }
+
+        return (
+          <div 
+            key={cellIndex} 
+            style={{
+              border: '1px solid #e0e0e0',
+              borderRadius: '4px',
+              minHeight: '80px',
+              padding: '8px',
+              backgroundColor: isCurrentMonthDay ? '#fff' : '#fafafa',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              color: isCurrentMonthDay ? '#333' : '#ccc',
+              fontWeight: isCurrentMonthDay ? 'normal' : 'lighter'
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+            {displayDay}
+          </div>
+        );
+      })}
+    </div>
     </div>
   );
-}
+};
+
+export default CalendarGrid;
