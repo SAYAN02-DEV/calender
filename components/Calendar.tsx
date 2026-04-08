@@ -145,6 +145,21 @@ const Calendar: React.FC<CalendarProps> = ({
 
   return (
     <div className="w-full bg-[#f8f9f7] p-8 md:p-12 rounded-3xl shadow-sm border border-gray-100 md:col-span-7 md:col-start-6 md:row-start-1 md:row-span-2 self-start">
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(0%); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+          animation: marquee 8s linear infinite;
+        }
+      `}</style>
+      <style global jsx>{`
+        .fade-edges {
+          mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+          -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+        }
+      `}</style>
       <div className="flex justify-between items-end mb-6 px-2">
         <div className="flex items-baseline gap-4">
           <div className="text-[5.5rem] font-serif text-[#114232] leading-none tracking-tight" style={{ fontFamily: 'Georgia, serif' }}>
@@ -236,19 +251,35 @@ const Calendar: React.FC<CalendarProps> = ({
               key={cellIndex} 
               onClick={() => handleDateClick(date)}
               onMouseEnter={() => setHoveredDate(date)}
-              className={`flex justify-center items-center min-h-[70px] p-2 cursor-pointer transition-all relative ${isSel ? 'ring-2 ring-offset-2 ring-[#B49B57] z-10 rounded-xl shadow-md' : 'rounded-lg'}`}
+              className={`flex flex-col justify-center items-center min-h-[70px] p-2 cursor-pointer transition-all duration-300 relative ${isSel ? 'ring-2 ring-offset-2 ring-[#B49B57] z-10 rounded-xl shadow-md' : 'rounded-lg'} ${dayEvent ? 'hover:scale-[1.3] hover:z-50 hover:shadow-2xl group' : ''}`}
               style={{
                 backgroundColor: cellBackground,
                 color: cellColor,
                 fontWeight: isSel || inRange || dayEvent ? '700' : isCurrentMonthDay ? '400' : '300',
                 opacity: isSel || isCurrentMonthDay ? 1 : 0.6,
-                transform: isSel ? 'scale(1.05)' : 'none'
+                transform: !dayEvent && isSel ? 'scale(1.05)' : undefined
               }}
-              title={dayEvent ? dayEvent.title : ''}
             >
-              {String(displayDay).padStart(2, '0')}
+              <span className={dayEvent ? "group-hover:-translate-y-2 transition-transform duration-300" : ""}>
+                {String(displayDay).padStart(2, '0')}
+              </span>
+              
               {dayEvent && (
-                <div className="absolute bottom-1.5 w-1.5 h-1.5 rounded-full bg-white opacity-70" />
+                <>
+                  <div className="absolute bottom-1.5 w-1.5 h-1.5 rounded-full bg-white opacity-70 group-hover:opacity-0 transition-opacity duration-300" />
+                  
+                  <div className="absolute inset-x-1 bottom-1.5 overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none fade-edges">
+                    <div className="text-[8px] font-bold tracking-wider text-white whitespace-nowrap px-1">
+                      {dayEvent.title.length > 8 ? (
+                        <div className="animate-marquee inline-block">
+                          {dayEvent.title} <span className="px-3">•</span> {dayEvent.title}
+                        </div>
+                      ) : (
+                        <div className="truncate text-center w-full">{dayEvent.title}</div>
+                      )}
+                    </div>
+                  </div>
+                </>
               )}
             </div>
           );
