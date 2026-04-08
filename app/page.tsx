@@ -108,52 +108,53 @@ const CalendarGrid: React.FC = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto my-5 p-4 flex flex-col md:flex-row gap-8 font-sans">
+    <div className="max-w-6xl mx-auto my-10 p-6 grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 font-sans bg-white">
+      
       {/* Hero Image */}
       <div 
-        className="w-full md:w-1/3 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200"
-        style={{ minHeight: '300px' }}
+        className="w-full rounded-tr-3xl rounded-br-3xl overflow-hidden bg-gray-200 shadow-sm md:col-span-5 md:col-start-1 md:row-start-1"
+        style={{ minHeight: '400px' }}
       >
         <img 
-          src="https://images.unsplash.com/photo-1506784365847-bbad939e9335?q=80&w=800&auto=format&fit=crop"
+          src="https://images.unsplash.com/photo-1542385151-efd9000785a0?q=80&w=800&auto=format&fit=crop"
           alt="Calendar Hero"
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
       </div>
 
       {/* Calendar Section */}
-      <div className="flex-1 w-full">
-        <div className="flex justify-between items-end mb-8 px-4">
-          <div className="flex items-baseline gap-3">
-            <div className="text-7xl font-serif text-[#114232] leading-none" style={{ fontFamily: 'Georgia, serif' }}>
+      <div className="w-full bg-[#f8f9f7] p-8 md:p-12 rounded-3xl shadow-sm border border-gray-100 md:col-span-7 md:col-start-6 md:row-start-1 md:row-span-2 self-start">
+        <div className="flex justify-between items-end mb-12 px-2">
+          <div className="flex items-baseline gap-4">
+            <div className="text-[5.5rem] font-serif text-[#114232] leading-none tracking-tight" style={{ fontFamily: 'Georgia, serif' }}>
               {String(displayHeaderDate.getDate()).padStart(2, '0')}
             </div>
-            <div className="flex flex-col pb-1">
-              <div className="text-[11px] font-bold tracking-widest text-[#B49B57] uppercase">
+            <div className="flex flex-col pb-2">
+              <div className="text-[10px] font-extrabold tracking-[0.2em] text-[#B49B57] uppercase">
                 {displayHeaderDate.toLocaleString('default', { month: 'long' })}
               </div>
-              <div className="text-sm italic text-gray-500">
+              <div className="text-xs italic text-gray-500 font-serif">
                 {displayHeaderDate.getFullYear()}
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 pb-2">
+          <div className="flex items-center gap-3 pb-4">
             <button 
               onClick={handlePrevMonth}
-              className="w-11 h-11 flex items-center justify-center rounded-2xl border-2 border-gray-100 text-[#114232] hover:bg-gray-50 transition-colors"
+              className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-[#114232] hover:bg-gray-100 transition-colors bg-white shadow-sm"
               aria-label="Previous Month"
             >
-              <svg fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4">
+              <svg fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-[14px] h-[14px]">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
               </svg>
             </button>
             <button 
               onClick={handleNextMonth}
-              className="w-11 h-11 flex items-center justify-center rounded-2xl border-2 border-gray-100 text-[#114232] hover:bg-gray-50 transition-colors"
+              className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-[#114232] hover:bg-gray-100 transition-colors bg-white shadow-sm"
               aria-label="Next Month"
             >
-              <svg fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4">
+              <svg fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-[14px] h-[14px]">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
             </button>
@@ -169,7 +170,7 @@ const CalendarGrid: React.FC = () => {
           gap: '1px',
           width: '100%',
           backgroundColor: 'transparent',
-          backgroundImage: mousePos.x !== -1000 ? `radial-gradient(circle 120px at ${mousePos.x}px ${mousePos.y}px, rgba(0,0,0,0.3) 0%, transparent 100%)` : 'none',
+          backgroundImage: mousePos.x !== -1000 ? `radial-gradient(circle 90px at ${mousePos.x}px ${mousePos.y}px, rgba(0,0,0,0.1) 0%, transparent 100%)` : 'none',
           padding: '1px'
         }}
       >
@@ -178,14 +179,17 @@ const CalendarGrid: React.FC = () => {
           key={day} 
           style={{ 
             textAlign: 'center', 
-            fontWeight: 'bold', 
-            paddingBottom: '8px',
+            fontSize: '10px',
+            fontWeight: '600', 
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            paddingBottom: '16px',
             paddingTop: '8px',
-            color: '#333',
-            backgroundColor: '#ffffff'
+            color: '#666',
+            backgroundColor: '#f8f9f7'
           }}
         >
-          {day}
+          {day.slice(0, 3)}
         </div>
       ))}
       {calendarDays.map(({ cellIndex, isCurrentMonthDay, displayDay, date }) => {
@@ -197,19 +201,44 @@ const CalendarGrid: React.FC = () => {
             key={cellIndex} 
             onClick={() => handleDateClick(date)}
             onMouseEnter={() => setHoveredDate(date)}
-            className="flex justify-center items-center min-h-[80px] p-2 cursor-pointer transition-colors"
+            className={`flex justify-center items-center min-h-[70px] p-2 cursor-pointer transition-colors ${isSel ? 'rounded-xl shadow-md' : 'rounded-lg'}`}
             style={{
-              backgroundColor: isSel ? '#114232' : inRange ? '#eef2f0' : '#ffffff',
-              color: isSel ? '#ffffff' : !isCurrentMonthDay ? '#ccc' : '#333',
-              fontWeight: isSel || inRange ? 'bold' : isCurrentMonthDay ? 'normal' : 'lighter'
+              backgroundColor: isSel ? '#114232' : inRange ? '#ecece8' : '#f8f9f7',
+              color: isSel ? '#ffffff' : !isCurrentMonthDay ? '#d1d1d1' : '#555',
+              fontWeight: isSel || inRange ? '600' : isCurrentMonthDay ? '400' : '300',
+              opacity: isSel || isCurrentMonthDay ? 1 : 0.6
             }}
           >
-            {displayDay}
+            {String(displayDay).padStart(2, '0')}
           </div>
         );
       })}
       </div>
     </div>
+    
+      {/* Monthly Memos Layout Block */}
+      <div className="px-2 md:col-span-5 md:col-start-1 md:row-start-2">
+        <h2 className="text-2xl font-serif italic text-[#396253] mb-6 border-b border-gray-200 pb-2 flex justify-between items-baseline">
+          Monthly Memos
+          <span className="text-[10px] font-bold tracking-widest text-[#B49B57] uppercase not-italic">
+            {new Date(0, month - 1).toLocaleString('default', { month: 'long' })} {year}
+          </span>
+        </h2>
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-sm font-bold text-gray-800 mb-1">PRUNING RITUAL</h3>
+            <p className="text-xs text-gray-600 leading-relaxed">Begin the light pruning of indoor ferns to encourage spring vitality. Use sterilized tools only.</p>
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-gray-800 mb-1">BOTANICAL WORKSHOP</h3>
+            <p className="text-xs text-gray-600 leading-relaxed">Seasonal arrangement masterclass focusing on dried winter flora and brass accents.</p>
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-gray-800 mb-1">SOIL ANALYSIS</h3>
+            <p className="text-xs text-gray-600 leading-relaxed">Check pH levels for the terrace garden. Prepare mineral infusions for the dormant saplings.</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
