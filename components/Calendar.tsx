@@ -52,8 +52,9 @@ const Calendar: React.FC<CalendarProps> = ({
 
   // Selected date helpers for event form
   const isRange = selection.length === 2;
-  const selectedDateStr = selection.length === 1 
-    ? `${selection[0].getFullYear()}-${String(selection[0].getMonth() + 1).padStart(2, '0')}-${String(selection[0].getDate()).padStart(2, '0')}` 
+  const selectedDate = selection.length === 1 ? selection[0] : null;
+  const selectedDateStr = selectedDate 
+    ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}` 
     : null;
   const existingEvent = selectedDateStr ? events.find(e => e.dateStr === selectedDateStr) : undefined;
 
@@ -328,18 +329,20 @@ const Calendar: React.FC<CalendarProps> = ({
           if (hoveredLinkedDate) {
             if (hoveredLinkedDate.includes('|')) {
               const [startStr, endStr] = hoveredLinkedDate.split('|');
-              const start = new Date(startStr).setTime(new Date(startStr).getTime() - 1000);
-              const end = new Date(endStr).getTime() + 86400000;
-              isLinkedHovered = dateTime > start && dateTime < end;
+              isLinkedHovered = dateStr >= startStr && dateStr <= endStr;
             } else {
-              isLinkedHovered = hoveredLinkedDate === dateStr;
+              // Backward compatibility for memos created right before the range ID update
+              const fallbackRange = rangeEvents.find(re => re.startDateStr === hoveredLinkedDate);
+              if (fallbackRange) {
+                isLinkedHovered = dateStr >= fallbackRange.startDateStr && dateStr <= fallbackRange.endDateStr;
+              } else {
+                isLinkedHovered = hoveredLinkedDate === dateStr;
+              }
             }
           }
 
           const rangeEvent = rangeEvents.find(re => {
-            const start = new Date(re.startDateStr).setTime(new Date(re.startDateStr).getTime() - 1000); // buffer
-            const end = new Date(re.endDateStr).getTime() + 86400000;
-            return dateTime > start && dateTime < end;
+            return dateStr >= re.startDateStr && dateStr <= re.endDateStr;
           });
 
           // Priority for background: Event color -> Selection -> Range -> Default
