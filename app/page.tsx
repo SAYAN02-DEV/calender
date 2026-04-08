@@ -27,6 +27,41 @@ const CalendarGrid: React.FC = () => {
     setMousePos({ x: -1000, y: -1000 });
   };
 
+  const [selection, setSelection] = useState<Date[]>([]);
+  const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
+
+  const displayHeaderDate = selection.length === 1 
+    ? selection[0] 
+    : new Date();
+
+  const handleDateClick = (date: Date) => {
+    if (selection.length === 0 || selection.length === 2) {
+      setSelection([date]);
+    } else if (selection.length === 1) {
+      if (date.getTime() === selection[0].getTime()) {
+        setSelection([]);
+      } else {
+        const [start, end] = [selection[0], date].sort((a, b) => a.getTime() - b.getTime());
+        setSelection([start, end]);
+      }
+    }
+  };
+
+  const isSelected = (date: Date) => {
+    return selection.some((d) => d.getTime() === date.getTime());
+  };
+
+  const isInRange = (date: Date) => {
+    if (selection.length === 2) {
+      return date.getTime() >= selection[0].getTime() && date.getTime() <= selection[1].getTime();
+    }
+    if (selection.length === 1 && hoveredDate) {
+      const [start, end] = [selection[0], hoveredDate].sort((a, b) => a.getTime() - b.getTime());
+      return date.getTime() >= start.getTime() && date.getTime() <= end.getTime();
+    }
+    return false;
+  };
+
   const calendarDays = useMemo(() => {
     const firstDay = getFirstDayOfMonth(year, month);
     const daysInMonth = new Date(year, month, 0).getDate();
@@ -37,15 +72,20 @@ const CalendarGrid: React.FC = () => {
       const isCurrentMonthDay = dayNumber > 0 && dayNumber <= daysInMonth;
 
       let displayDay: number;
+      let date: Date;
+
       if (dayNumber <= 0) {
         displayDay = daysInPrevMonth + dayNumber;
+        date = new Date(year, month - 2, displayDay);
       } else if (dayNumber > daysInMonth) {
         displayDay = dayNumber - daysInMonth;
+        date = new Date(year, month, displayDay);
       } else {
         displayDay = dayNumber;
+        date = new Date(year, month - 1, displayDay);
       }
 
-      return { cellIndex, isCurrentMonthDay, displayDay };
+      return { cellIndex, isCurrentMonthDay, displayDay, date };
     });
   }, [year, month]);
 
@@ -83,37 +123,42 @@ const CalendarGrid: React.FC = () => {
 
       {/* Calendar Section */}
       <div className="flex-1 w-full">
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-          <button 
-            onClick={handlePrevMonth}
-          style={{ padding: '8px 12px', fontSize: '16px', cursor: 'pointer' }}
-        >
-          &lt;
-        </button>
-        <select 
-          value={month} 
-          onChange={(e) => setMonth(Number(e.target.value))}
-          style={{ padding: '8px', fontSize: '16px' }}
-        >
-          {Array.from({ length: 12 }, (_, i) => (
-            <option key={i + 1} value={i + 1}>
-              {new Date(0, i).toLocaleString('default', { month: 'long' })}
-            </option>
-          ))}
-        </select>
-        <input 
-          type="number" 
-          value={year} 
-          onChange={(e) => setYear(Number(e.target.value))}
-          style={{ padding: '8px', fontSize: '16px', width: '100px' }}
-        />
-        <button 
-          onClick={handleNextMonth}
-          style={{ padding: '8px 12px', fontSize: '16px', cursor: 'pointer' }}
-        >
-          &gt;
-        </button>
-      </div>
+        <div className="flex justify-between items-end mb-8 px-4">
+          <div className="flex items-baseline gap-3">
+            <div className="text-7xl font-serif text-[#114232] leading-none" style={{ fontFamily: 'Georgia, serif' }}>
+              {String(displayHeaderDate.getDate()).padStart(2, '0')}
+            </div>
+            <div className="flex flex-col pb-1">
+              <div className="text-[11px] font-bold tracking-widest text-[#B49B57] uppercase">
+                {displayHeaderDate.toLocaleString('default', { month: 'long' })}
+              </div>
+              <div className="text-sm italic text-gray-500">
+                {displayHeaderDate.getFullYear()}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 pb-2">
+            <button 
+              onClick={handlePrevMonth}
+              className="w-11 h-11 flex items-center justify-center rounded-2xl border-2 border-gray-100 text-[#114232] hover:bg-gray-50 transition-colors"
+              aria-label="Previous Month"
+            >
+              <svg fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
+            </button>
+            <button 
+              onClick={handleNextMonth}
+              className="w-11 h-11 flex items-center justify-center rounded-2xl border-2 border-gray-100 text-[#114232] hover:bg-gray-50 transition-colors"
+              aria-label="Next Month"
+            >
+              <svg fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-4 h-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </button>
+          </div>
+        </div>
       <div 
         ref={gridRef}
         onMouseMove={handleMouseMove}
@@ -143,19 +188,26 @@ const CalendarGrid: React.FC = () => {
           {day}
         </div>
       ))}
-      {calendarDays.map(({ cellIndex, isCurrentMonthDay, displayDay }) => (
-        <div 
-          key={cellIndex} 
-          className="flex justify-center items-center min-h-[80px] p-2 cursor-default"
-          style={{
-            backgroundColor: '#ffffff',
-            color: isCurrentMonthDay ? '#333' : '#ccc',
-            fontWeight: isCurrentMonthDay ? 'normal' : 'lighter'
-          }}
-        >
-          {displayDay}
-        </div>
-      ))}
+      {calendarDays.map(({ cellIndex, isCurrentMonthDay, displayDay, date }) => {
+        const isSel = isSelected(date);
+        const inRange = isInRange(date);
+
+        return (
+          <div 
+            key={cellIndex} 
+            onClick={() => handleDateClick(date)}
+            onMouseEnter={() => setHoveredDate(date)}
+            className="flex justify-center items-center min-h-[80px] p-2 cursor-pointer transition-colors"
+            style={{
+              backgroundColor: isSel ? '#114232' : inRange ? '#eef2f0' : '#ffffff',
+              color: isSel ? '#ffffff' : !isCurrentMonthDay ? '#ccc' : '#333',
+              fontWeight: isSel || inRange ? 'bold' : isCurrentMonthDay ? 'normal' : 'lighter'
+            }}
+          >
+            {displayDay}
+          </div>
+        );
+      })}
       </div>
     </div>
     </div>
