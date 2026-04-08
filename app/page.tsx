@@ -55,11 +55,7 @@ const CalendarGrid: React.FC = () => {
     } else {
       const currentMonth = new Date().getMonth() + 1;
       const currentYear = new Date().getFullYear();
-      const defaultMemos: Memo[] = [
-        { id: '1', month: currentMonth, year: currentYear, title: 'PRUNING RITUAL', description: 'Begin the light pruning of indoor ferns to encourage spring vitality. Use sterilized tools only.' },
-        { id: '2', month: currentMonth, year: currentYear, title: 'BOTANICAL WORKSHOP', description: 'Seasonal arrangement masterclass focusing on dried winter flora and brass accents.' },
-        { id: '3', month: currentMonth, year: currentYear, title: 'SOIL ANALYSIS', description: 'Check pH levels for the terrace garden. Prepare mineral infusions for the dormant saplings.' },
-      ];
+      const defaultMemos: Memo[] = [];
       setMemos(defaultMemos);
     }
     setMemosLoaded(true);
@@ -133,7 +129,7 @@ const CalendarGrid: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto my-10 p-6 md:p-10 grid grid-cols-1 md:grid-cols-12 md:grid-rows-[auto_1fr] gap-8 md:gap-12 font-sans bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20">
+    <div className="w-full max-w-6xl mx-auto my-10 p-6 md:p-10 grid grid-cols-1 md:grid-cols-12 md:grid-rows-[auto_1fr] gap-8 md:gap-x-12 md:gap-y-8 font-sans bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 items-start">
       
       {/* Hero Image */}
       <div className="order-1 md:order-none md:col-span-5 md:col-start-1 md:row-start-1">
