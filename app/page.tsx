@@ -15,9 +15,33 @@ const CalendarGrid: React.FC = () => {
   const daysInMonth = new Date(year, month, 0).getDate();
   const daysInPrevMonth = new Date(year, month - 1, 0).getDate();
 
+  const handlePrevMonth = () => {
+    if (month === 1) {
+      setMonth(12);
+      setYear((y) => y - 1);
+    } else {
+      setMonth((m) => m - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (month === 12) {
+      setMonth(1);
+      setYear((y) => y + 1);
+    } else {
+      setMonth((m) => m + 1);
+    }
+  };
+
   return (
     <div style={{ maxWidth: '800px', margin: '20px auto', fontFamily: 'sans-serif' }}>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+        <button 
+          onClick={handlePrevMonth}
+          style={{ padding: '8px 12px', fontSize: '16px', cursor: 'pointer' }}
+        >
+          &lt;
+        </button>
         <select 
           value={month} 
           onChange={(e) => setMonth(Number(e.target.value))}
@@ -35,6 +59,12 @@ const CalendarGrid: React.FC = () => {
           onChange={(e) => setYear(Number(e.target.value))}
           style={{ padding: '8px', fontSize: '16px', width: '100px' }}
         />
+        <button 
+          onClick={handleNextMonth}
+          style={{ padding: '8px 12px', fontSize: '16px', cursor: 'pointer' }}
+        >
+          &gt;
+        </button>
       </div>
       <div 
         style={{
