@@ -13,6 +13,7 @@ const CalendarGrid: React.FC = () => {
 
   const firstDay = getFirstDayOfMonth(year, month);
   const daysInMonth = new Date(year, month, 0).getDate();
+  const daysInPrevMonth = new Date(year, month - 1, 0).getDate();
 
   return (
     <div style={{ maxWidth: '800px', margin: '20px auto', fontFamily: 'sans-serif' }}>
@@ -60,6 +61,15 @@ const CalendarGrid: React.FC = () => {
         const dayNumber = cellIndex - firstDay + 1;
         const isCurrentMonthDay = dayNumber > 0 && dayNumber <= daysInMonth;
 
+        let displayDay: number;
+        if (dayNumber <= 0) {
+          displayDay = daysInPrevMonth + dayNumber;
+        } else if (dayNumber > daysInMonth) {
+          displayDay = dayNumber - daysInMonth;
+        } else {
+          displayDay = dayNumber;
+        }
+
         return (
           <div 
             key={cellIndex} 
@@ -72,11 +82,11 @@ const CalendarGrid: React.FC = () => {
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              color: isCurrentMonthDay ? '#333' : 'transparent',
+              color: isCurrentMonthDay ? '#333' : '#ccc',
               fontWeight: isCurrentMonthDay ? 'normal' : 'lighter'
             }}
           >
-            {isCurrentMonthDay ? dayNumber : ''}
+            {displayDay}
           </div>
         );
       })}
