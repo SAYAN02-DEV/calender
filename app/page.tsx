@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { getFirstDayOfMonth } from '@/lib';
+import MonthlyMemos from '@/components/MonthlyMemos';
 
 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const gridCells = Array.from({ length: 42 }, (_, index) => index);
@@ -112,8 +113,7 @@ const CalendarGrid: React.FC = () => {
       
       {/* Hero Image */}
       <div 
-        className="w-full rounded-tr-3xl rounded-br-3xl overflow-hidden bg-gray-200 shadow-sm md:col-span-5 md:col-start-1 md:row-start-1"
-        style={{ minHeight: '400px' }}
+        className="w-full rounded-3xl overflow-hidden bg-gray-200 shadow-sm md:col-span-5 md:col-start-1 md:row-start-1 h-48 md:h-[400px] xl:h-[500px]"
       >
         <img 
           src="https://images.unsplash.com/photo-1542385151-efd9000785a0?q=80&w=800&auto=format&fit=crop"
@@ -217,28 +217,7 @@ const CalendarGrid: React.FC = () => {
     </div>
     
       {/* Monthly Memos Layout Block */}
-      <div className="px-2 md:col-span-5 md:col-start-1 md:row-start-2">
-        <h2 className="text-2xl font-serif italic text-[#396253] mb-6 border-b border-gray-200 pb-2 flex justify-between items-baseline">
-          Monthly Memos
-          <span className="text-[10px] font-bold tracking-widest text-[#B49B57] uppercase not-italic">
-            {new Date(0, month - 1).toLocaleString('default', { month: 'long' })} {year}
-          </span>
-        </h2>
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-sm font-bold text-gray-800 mb-1">PRUNING RITUAL</h3>
-            <p className="text-xs text-gray-600 leading-relaxed">Begin the light pruning of indoor ferns to encourage spring vitality. Use sterilized tools only.</p>
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-gray-800 mb-1">BOTANICAL WORKSHOP</h3>
-            <p className="text-xs text-gray-600 leading-relaxed">Seasonal arrangement masterclass focusing on dried winter flora and brass accents.</p>
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-gray-800 mb-1">SOIL ANALYSIS</h3>
-            <p className="text-xs text-gray-600 leading-relaxed">Check pH levels for the terrace garden. Prepare mineral infusions for the dormant saplings.</p>
-          </div>
-        </div>
-      </div>
+      <MonthlyMemos month={month} year={year} />
     </div>
   );
 };
