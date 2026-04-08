@@ -52,10 +52,24 @@ const CalendarGrid: React.FC = () => {
   };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '20px auto', fontFamily: 'sans-serif' }}>
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-        <button 
-          onClick={handlePrevMonth}
+    <div className="max-w-5xl mx-auto my-5 p-4 flex flex-col md:flex-row gap-8 font-sans">
+      {/* Hero Image */}
+      <div 
+        className="w-full md:w-1/3 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200"
+        style={{ minHeight: '300px' }}
+      >
+        <img 
+          src="https://images.unsplash.com/photo-1506784365847-bbad939e9335?q=80&w=800&auto=format&fit=crop"
+          alt="Calendar Hero"
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      </div>
+
+      {/* Calendar Section */}
+      <div className="flex-1 w-full">
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+          <button 
+            onClick={handlePrevMonth}
           style={{ padding: '8px 12px', fontSize: '16px', cursor: 'pointer' }}
         >
           &lt;
@@ -124,6 +138,7 @@ const CalendarGrid: React.FC = () => {
           {displayDay}
         </div>
       ))}
+      </div>
     </div>
     </div>
   );
