@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { getFirstDayOfMonth } from '@/lib';
+import { CalendarEvent } from '@/app/page';
 
 interface CalendarProps {
   year: number;
@@ -16,6 +17,8 @@ interface CalendarProps {
   gridRef: React.RefObject<HTMLDivElement | null>;
   onMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void;
   onMouseLeave: () => void;
+  events: CalendarEvent[];
+  setEvents: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
 }
 
 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -33,9 +36,57 @@ const Calendar: React.FC<CalendarProps> = ({
   mousePos,
   gridRef,
   onMouseMove,
-  onMouseLeave
+  onMouseLeave,
+  events,
+  setEvents
 }) => {
   const displayHeaderDate = selection.length === 1 ? selection[0] : new Date();
+
+  // Selected date helpers for event form
+  const selectedDate = selection.length === 1 ? selection[0] : null;
+  const selectedDateStr = selectedDate ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}` : null;
+  const existingEvent = selectedDateStr ? events.find(e => e.dateStr === selectedDateStr) : undefined;
+
+  const [eventTitle, setEventTitle] = useState('');
+  const [eventColor, setEventColor] = useState('#3b82f6');
+  
+  // When selection changes, update the form to match any existing event
+  useEffect(() => {
+    if (existingEvent) {
+      setEventTitle(existingEvent.title);
+      setEventColor(existingEvent.color);
+    } else {
+      setEventTitle('');
+      setEventColor('#3b82f6');
+    }
+  }, [existingEvent, selectedDateStr]);
+  
+  const handleSaveEvent = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedDateStr || !eventTitle.trim()) return;
+
+    if (existingEvent) {
+      // Update
+      setEvents(events.map(ev => ev.id === existingEvent.id ? { ...ev, title: eventTitle, color: eventColor } : ev));
+    } else {
+      // Create
+      const newEvent: CalendarEvent = {
+        id: Date.now().toString(),
+        dateStr: selectedDateStr,
+        title: eventTitle.trim(),
+        color: eventColor
+      };
+      setEvents([...events, newEvent]);
+    }
+  };
+
+  const handleDeleteEvent = () => {
+    if (existingEvent) {
+      setEvents(events.filter(ev => ev.id !== existingEvent.id));
+      setEventTitle('');
+      setEventColor('#3b82f6');
+    }
+  };
 
   const handleDateClick = (date: Date) => {
     if (selection.length === 0 || selection.length === 2) {
@@ -172,25 +223,89 @@ const Calendar: React.FC<CalendarProps> = ({
         {calendarDays.map(({ cellIndex, isCurrentMonthDay, displayDay, date }) => {
           const isSel = isSelected(date);
           const inRange = isInRange(date);
+          
+          const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+          const dayEvent = events.find(e => e.dateStr === dateStr);
+
+          // Priority for background: Event color -> Selection -> Range -> Default
+          const cellBackground = dayEvent ? dayEvent.color : isSel ? '#114232' : inRange ? '#ecece8' : '#f8f9f7';
+          const cellColor = (dayEvent || isSel) ? '#ffffff' : !isCurrentMonthDay ? '#d1d1d1' : '#555';
 
           return (
             <div 
               key={cellIndex} 
               onClick={() => handleDateClick(date)}
               onMouseEnter={() => setHoveredDate(date)}
-              className={`flex justify-center items-center min-h-[70px] p-2 cursor-pointer transition-colors ${isSel ? 'rounded-xl shadow-md' : 'rounded-lg'}`}
+              className={`flex justify-center items-center min-h-[70px] p-2 cursor-pointer transition-all relative ${isSel ? 'ring-2 ring-offset-2 ring-[#B49B57] z-10 rounded-xl shadow-md' : 'rounded-lg'}`}
               style={{
-                backgroundColor: isSel ? '#114232' : inRange ? '#ecece8' : '#f8f9f7',
-                color: isSel ? '#ffffff' : !isCurrentMonthDay ? '#d1d1d1' : '#555',
-                fontWeight: isSel || inRange ? '600' : isCurrentMonthDay ? '400' : '300',
-                opacity: isSel || isCurrentMonthDay ? 1 : 0.6
+                backgroundColor: cellBackground,
+                color: cellColor,
+                fontWeight: isSel || inRange || dayEvent ? '700' : isCurrentMonthDay ? '400' : '300',
+                opacity: isSel || isCurrentMonthDay ? 1 : 0.6,
+                transform: isSel ? 'scale(1.05)' : 'none'
               }}
+              title={dayEvent ? dayEvent.title : ''}
             >
               {String(displayDay).padStart(2, '0')}
+              {dayEvent && (
+                <div className="absolute bottom-1.5 w-1.5 h-1.5 rounded-full bg-white opacity-70" />
+              )}
             </div>
           );
         })}
       </div>
+
+      {/* Inline Event Adder for Selected Date */}
+      {selection.length === 1 && selectedDateStr && (
+        <div className="mt-8 p-6 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider flex justify-between items-center">
+            {existingEvent ? 'Edit Event' : 'Add Event'}
+            <span className="text-[#396253] text-[10px]">
+              {selectedDate!.toLocaleDateString('default', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
+          </h3>
+          
+          <form onSubmit={handleSaveEvent} className="flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <input 
+                type="text" 
+                placeholder="Event Title..." 
+                className="flex-1 text-sm font-semibold text-gray-800 border-b border-gray-300 py-1.5 bg-transparent placeholder-gray-400 focus:outline-none focus:border-[#396253]"
+                value={eventTitle}
+                onChange={e => setEventTitle(e.target.value)}
+                required
+              />
+              <input
+                type="color"
+                value={eventColor}
+                onChange={e => setEventColor(e.target.value)}
+                className="w-10 h-10 border-0 p-0 cursor-pointer rounded-full overflow-hidden"
+                style={{ backgroundColor: 'transparent' }}
+                title="Choose event color"
+              />
+            </div>
+            
+            <div className="flex justify-end gap-2 mt-2">
+              {existingEvent && (
+                <button 
+                  type="button" 
+                  onClick={handleDeleteEvent} 
+                  className="text-xs text-red-500 hover:text-red-700 px-3 py-1.5 font-semibold transition-colors bg-red-50 hover:bg-red-100 rounded-lg mr-auto"
+                >
+                  Delete
+                </button>
+              )}
+              <button 
+                type="submit" 
+                className="text-xs text-white bg-[#114232] hover:bg-[#0a291f] font-semibold px-5 py-2 rounded-lg transition-colors shadow-sm"
+              >
+                {existingEvent ? 'Update' : 'Save Event'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
     </div>
   );
 };

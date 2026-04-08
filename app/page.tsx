@@ -1,9 +1,16 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MonthlyMemos from '@/components/MonthlyMemos';
 import Calendar from '@/components/Calendar';
 import HeroImage from '@/components/HeroImage';
+
+export interface CalendarEvent {
+  id: string;
+  dateStr: string; // YYYY-MM-DD
+  title: string;
+  color: string;
+}
 
 const CalendarGrid: React.FC = () => {
   const currentDate = new Date();
@@ -11,6 +18,27 @@ const CalendarGrid: React.FC = () => {
   const [month, setMonth] = useState(currentDate.getMonth() + 1);
   const [selection, setSelection] = useState<Date[]>([]);
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
+  
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('calendar_events_data');
+    if (stored) {
+      try {
+        setEvents(JSON.parse(stored));
+      } catch (e) {
+        console.error('Failed to parse events', e);
+      }
+    }
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('calendar_events_data', JSON.stringify(events));
+    }
+  }, [events, isLoaded]);
 
   const gridRef = React.useRef<HTMLDivElement>(null);
   const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 });
@@ -56,20 +84,24 @@ const CalendarGrid: React.FC = () => {
       </div>
 
       {/* Calendar Section */}
-      <Calendar 
-        year={year}
-        month={month}
-        onNextMonth={handleNextMonth}
-        onPrevMonth={handlePrevMonth}
-        selection={selection}
-        setSelection={setSelection}
-        hoveredDate={hoveredDate}
-        setHoveredDate={setHoveredDate}
-        mousePos={mousePos}
-        gridRef={gridRef}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-      />
+      <div className="md:col-span-7 md:col-start-6 md:row-start-1 md:row-span-2 self-start flex flex-col gap-6">
+        <Calendar 
+          year={year}
+          month={month}
+          onNextMonth={handleNextMonth}
+          onPrevMonth={handlePrevMonth}
+          selection={selection}
+          setSelection={setSelection}
+          hoveredDate={hoveredDate}
+          setHoveredDate={setHoveredDate}
+          mousePos={mousePos}
+          gridRef={gridRef}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          events={events}
+          setEvents={setEvents}
+        />
+      </div>
     </div>
   );
 };
