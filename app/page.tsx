@@ -133,23 +133,15 @@ const CalendarGrid: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto my-10 p-6 md:p-10 grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 font-sans bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20">
+    <div className="w-full max-w-6xl mx-auto my-10 p-6 md:p-10 grid grid-cols-1 md:grid-cols-12 md:grid-rows-[auto_1fr] gap-8 md:gap-12 font-sans bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20">
       
-      {/* Left Column: Hero & Memos */}
-      <div className="flex flex-col gap-8 md:col-span-5 md:col-start-1 md:row-start-1">
+      {/* Hero Image */}
+      <div className="order-1 md:order-none md:col-span-5 md:col-start-1 md:row-start-1">
         <HeroImage month={month} />
-        <MonthlyMemos 
-          month={month} 
-          year={year} 
-          memos={memos}
-          setMemos={setMemos}
-          memosLoaded={memosLoaded}
-          setHoveredLinkedDate={setHoveredLinkedDate}
-        />
       </div>
 
       {/* Calendar Section */}
-      <div className="md:col-span-7 md:col-start-6 md:row-start-1 md:row-span-2 self-start flex flex-col gap-6">
+      <div className="order-2 md:order-none md:col-span-7 md:col-start-6 md:row-start-1 md:row-span-2 self-start flex flex-col gap-6">
         <Calendar 
           year={year}
           month={month}
@@ -169,6 +161,18 @@ const CalendarGrid: React.FC = () => {
           setRangeEvents={setRangeEvents}
           setMemos={setMemos}
           hoveredLinkedDate={hoveredLinkedDate}
+        />
+      </div>
+
+      {/* Monthly Memos */}
+      <div className="order-3 md:order-none md:col-span-5 md:col-start-1 md:row-start-2 self-start flex flex-col">
+        <MonthlyMemos 
+          month={month} 
+          year={year} 
+          memos={memos}
+          setMemos={setMemos}
+          memosLoaded={memosLoaded}
+          setHoveredLinkedDate={setHoveredLinkedDate}
         />
       </div>
     </div>
