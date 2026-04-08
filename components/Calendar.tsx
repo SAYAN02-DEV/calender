@@ -7,8 +7,6 @@ import { CalendarEvent } from '@/app/page';
 interface CalendarProps {
   year: number;
   month: number;
-  onNextMonth: () => void;
-  onPrevMonth: () => void;
   selection: Date[];
   setSelection: React.Dispatch<React.SetStateAction<Date[]>>;
   hoveredDate: Date | null;
@@ -27,8 +25,6 @@ const gridCells = Array.from({ length: 42 }, (_, index) => index);
 const Calendar: React.FC<CalendarProps> = ({
   year,
   month,
-  onNextMonth,
-  onPrevMonth,
   selection,
   setSelection,
   hoveredDate,
@@ -175,27 +171,6 @@ const Calendar: React.FC<CalendarProps> = ({
               {displayHeaderDate.getFullYear()}
             </div>
           </div>
-        </div>
-
-        <div className="flex items-center gap-3 pb-4">
-          <button 
-            onClick={onPrevMonth}
-            className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-[#114232] hover:bg-gray-100 transition-colors bg-white shadow-sm"
-            aria-label="Previous Month"
-          >
-            <svg fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-[14px] h-[14px]">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
-          </button>
-          <button 
-            onClick={onNextMonth}
-            className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-[#114232] hover:bg-gray-100 transition-colors bg-white shadow-sm"
-            aria-label="Next Month"
-          >
-            <svg fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-[14px] h-[14px]">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-            </svg>
-          </button>
         </div>
       </div>
 

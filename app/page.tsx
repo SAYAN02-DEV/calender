@@ -75,32 +75,56 @@ const CalendarGrid: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto my-10 p-6 grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 font-sans bg-white">
+    <div className="w-full max-w-6xl mx-auto my-10 p-6 font-sans">
       
-      {/* Left Column: Hero & Memos */}
-      <div className="flex flex-col gap-8 md:col-span-5 md:col-start-1 md:row-start-1">
-        <HeroImage />
-        <MonthlyMemos month={month} year={year} />
+      {/* Global Month Navigation */}
+      <div className="flex justify-end items-center mb-8 px-2">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={handlePrevMonth}
+            className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-[#114232] hover:bg-gray-100 transition-colors bg-white shadow-sm"
+            aria-label="Previous Month"
+          >
+            <svg fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-[14px] h-[14px]">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+          </button>
+          <button 
+            onClick={handleNextMonth}
+            className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-[#114232] hover:bg-gray-100 transition-colors bg-white shadow-sm"
+            aria-label="Next Month"
+          >
+            <svg fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-[14px] h-[14px]">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
+        </div>
       </div>
 
-      {/* Calendar Section */}
-      <div className="md:col-span-7 md:col-start-6 md:row-start-1 md:row-span-2 self-start flex flex-col gap-6">
-        <Calendar 
-          year={year}
-          month={month}
-          onNextMonth={handleNextMonth}
-          onPrevMonth={handlePrevMonth}
-          selection={selection}
-          setSelection={setSelection}
-          hoveredDate={hoveredDate}
-          setHoveredDate={setHoveredDate}
-          mousePos={mousePos}
-          gridRef={gridRef}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-          events={events}
-          setEvents={setEvents}
-        />
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 bg-white">
+        {/* Left Column: Hero & Memos */}
+        <div className="flex flex-col gap-8 md:col-span-5 md:col-start-1 md:row-start-1">
+          <HeroImage />
+          <MonthlyMemos month={month} year={year} />
+        </div>
+
+        {/* Calendar Section */}
+        <div className="md:col-span-7 md:col-start-6 md:row-start-1 md:row-span-2 self-start flex flex-col gap-6">
+          <Calendar 
+            year={year}
+            month={month}
+            selection={selection}
+            setSelection={setSelection}
+            hoveredDate={hoveredDate}
+            setHoveredDate={setHoveredDate}
+            mousePos={mousePos}
+            gridRef={gridRef}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            events={events}
+            setEvents={setEvents}
+          />
+        </div>
       </div>
     </div>
   );
