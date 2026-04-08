@@ -2,11 +2,13 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { getFirstDayOfMonth } from '@/lib';
-import { CalendarEvent } from '@/app/page';
+import { CalendarEvent, Memo } from '@/app/page';
 
 interface CalendarProps {
   year: number;
   month: number;
+  onNextMonth: () => void;
+  onPrevMonth: () => void;
   selection: Date[];
   setSelection: React.Dispatch<React.SetStateAction<Date[]>>;
   hoveredDate: Date | null;
@@ -17,6 +19,8 @@ interface CalendarProps {
   onMouseLeave: () => void;
   events: CalendarEvent[];
   setEvents: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
+  setMemos: React.Dispatch<React.SetStateAction<Memo[]>>;
+  hoveredLinkedDate: string | null;
 }
 
 const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -25,6 +29,8 @@ const gridCells = Array.from({ length: 42 }, (_, index) => index);
 const Calendar: React.FC<CalendarProps> = ({
   year,
   month,
+  onNextMonth,
+  onPrevMonth,
   selection,
   setSelection,
   hoveredDate,
@@ -34,7 +40,9 @@ const Calendar: React.FC<CalendarProps> = ({
   onMouseMove,
   onMouseLeave,
   events,
-  setEvents
+  setEvents,
+  setMemos,
+  hoveredLinkedDate
 }) => {
   const displayHeaderDate = selection.length === 1 ? selection[0] : new Date();
 
@@ -73,6 +81,23 @@ const Calendar: React.FC<CalendarProps> = ({
         color: eventColor
       };
       setEvents([...events, newEvent]);
+      
+      // Optionally add to monthly memos
+      const shouldAddMemo = window.confirm(`Would you like to add "${eventTitle.trim()}" to the Monthly Memos?`);
+      if (shouldAddMemo) {
+        const dateObj = new Date(selectedDateStr);
+        const newMemo: Memo = {
+          id: Date.now().toString() + '_memo',
+          month: dateObj.getMonth() + 1,
+          year: dateObj.getFullYear(),
+          title: eventTitle.trim().toUpperCase(),
+          description: `Event scheduled for ${dateObj.toLocaleDateString()}.`,
+          linkedDateStr: selectedDateStr
+        };
+        setMemos((prevMemos: Memo[]) => {
+          return [...prevMemos, newMemo];
+        });
+      }
     }
     setIsEventModalOpen(false);
   };
@@ -172,6 +197,27 @@ const Calendar: React.FC<CalendarProps> = ({
             </div>
           </div>
         </div>
+
+        <div className="flex items-center gap-3 pb-4">
+          <button 
+            onClick={onPrevMonth}
+            className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-[#114232] hover:bg-gray-100 transition-colors bg-white shadow-sm"
+            aria-label="Previous Month"
+          >
+            <svg fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-[14px] h-[14px]">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+          </button>
+          <button 
+            onClick={onNextMonth}
+            className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-[#114232] hover:bg-gray-100 transition-colors bg-white shadow-sm"
+            aria-label="Next Month"
+          >
+            <svg fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-[14px] h-[14px]">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div className="px-2 mb-4 text-center pb-2">
@@ -218,6 +264,7 @@ const Calendar: React.FC<CalendarProps> = ({
           
           const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
           const dayEvent = events.find(e => e.dateStr === dateStr);
+          const isLinkedHovered = hoveredLinkedDate === dateStr;
 
           // Priority for background: Event color -> Selection -> Range -> Default
           const cellBackground = dayEvent ? dayEvent.color : isSel ? '#114232' : inRange ? '#ecece8' : '#f8f9f7';
@@ -234,18 +281,20 @@ const Calendar: React.FC<CalendarProps> = ({
                 color: cellColor,
                 fontWeight: isSel || inRange || dayEvent ? '700' : isCurrentMonthDay ? '400' : '300',
                 opacity: isSel || isCurrentMonthDay ? 1 : 0.6,
-                transform: !dayEvent && isSel ? 'scale(1.05)' : undefined
+                transform: isLinkedHovered ? 'scale(1.3)' : !dayEvent && isSel ? 'scale(1.05)' : undefined,
+                zIndex: isLinkedHovered ? 50 : undefined,
+                boxShadow: isLinkedHovered ? '0 25px 50px -12px rgba(0, 0, 0, 0.25)' : undefined
               }}
             >
-              <span className={dayEvent ? "group-hover:-translate-y-2 transition-transform duration-300" : ""}>
+              <span className={dayEvent || isLinkedHovered ? "group-hover:-translate-y-2 transition-transform duration-300" : ""}>
                 {String(displayDay).padStart(2, '0')}
               </span>
               
               {dayEvent && (
                 <>
-                  <div className="absolute bottom-1.5 w-1.5 h-1.5 rounded-full bg-white opacity-70 group-hover:opacity-0 transition-opacity duration-300" />
+                  <div className={`absolute bottom-1.5 w-1.5 h-1.5 rounded-full bg-white opacity-70 group-hover:opacity-0 transition-opacity duration-300 ${isLinkedHovered ? 'opacity-0' : ''}`} />
                   
-                  <div className="absolute inset-x-1 bottom-1.5 overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none fade-edges">
+                  <div className={`absolute inset-x-1 bottom-1.5 overflow-hidden group-hover:opacity-100 transition-opacity duration-300 pointer-events-none fade-edges ${isLinkedHovered ? 'opacity-100' : 'opacity-0'}`}>
                     <div className="text-[8px] font-bold tracking-wider text-white whitespace-nowrap px-1">
                       {dayEvent.title.length > 8 ? (
                         <div className="animate-marquee inline-block">

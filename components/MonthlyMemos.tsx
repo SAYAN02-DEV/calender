@@ -5,51 +5,25 @@ import React, { useState, useEffect } from 'react';
 interface MonthlyMemosProps {
   month: number;
   year: number;
+  memos: Memo[];
+  setMemos: React.Dispatch<React.SetStateAction<Memo[]>>;
+  memosLoaded: boolean;
+  setHoveredLinkedDate: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
-interface Memo {
+export interface Memo {
   id: string;
   month: number;
   year: number;
   title: string;
   description: string;
+  linkedDateStr?: string;
 }
 
-const MonthlyMemos: React.FC<MonthlyMemosProps> = ({ month, year }) => {
-  const [memos, setMemos] = useState<Memo[]>([]);
+const MonthlyMemos: React.FC<MonthlyMemosProps> = ({ month, year, memos, setMemos, memosLoaded, setHoveredLinkedDate }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newDescription, setNewDescription] = useState('');
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  useEffect(() => {
-    const stored = localStorage.getItem('monthly_memos_data');
-    if (stored) {
-      try {
-        setMemos(JSON.parse(stored));
-      } catch (e) {
-        console.error('Failed to parse memos', e);
-      }
-    } else {
-      // Seed with initial defaults for the current month if local storage is empty
-      const currentMonth = new Date().getMonth() + 1;
-      const currentYear = new Date().getFullYear();
-      const defaultMemos: Memo[] = [
-        { id: '1', month: currentMonth, year: currentYear, title: 'PRUNING RITUAL', description: 'Begin the light pruning of indoor ferns to encourage spring vitality. Use sterilized tools only.' },
-        { id: '2', month: currentMonth, year: currentYear, title: 'BOTANICAL WORKSHOP', description: 'Seasonal arrangement masterclass focusing on dried winter flora and brass accents.' },
-        { id: '3', month: currentMonth, year: currentYear, title: 'SOIL ANALYSIS', description: 'Check pH levels for the terrace garden. Prepare mineral infusions for the dormant saplings.' },
-      ];
-      setMemos(defaultMemos);
-      localStorage.setItem('monthly_memos_data', JSON.stringify(defaultMemos));
-    }
-    setIsLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem('monthly_memos_data', JSON.stringify(memos));
-    }
-  }, [memos, isLoaded]);
 
   const handleAddMemo = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +47,7 @@ const MonthlyMemos: React.FC<MonthlyMemosProps> = ({ month, year }) => {
     setMemos(memos.filter(m => m.id !== id));
   };
 
-  if (!isLoaded) return <div className="px-2 md:col-span-5 md:col-start-1 md:row-start-2 min-h-[200px]" />;
+  if (!memosLoaded) return <div className="px-2 md:col-span-5 md:col-start-1 md:row-start-2 min-h-[200px]" />;
 
   const currentMemos = memos.filter(m => m.month === month && m.year === year);
 
@@ -133,7 +107,20 @@ const MonthlyMemos: React.FC<MonthlyMemosProps> = ({ month, year }) => {
       <div className="space-y-6 overflow-y-auto pr-2 custom-scrollbar" style={{ maxHeight: '350px' }}>
         {currentMemos.length > 0 ? (
           currentMemos.map((memo) => (
-            <div key={memo.id} className="group relative">
+            <div 
+              key={memo.id} 
+              className="group relative"
+              onMouseEnter={() => {
+                if (memo.linkedDateStr) {
+                  setHoveredLinkedDate(memo.linkedDateStr);
+                }
+              }}
+              onMouseLeave={() => {
+                if (memo.linkedDateStr) {
+                  setHoveredLinkedDate(null);
+                }
+              }}
+            >
               <h3 className="text-sm font-bold text-gray-800 mb-1 uppercase pr-6">{memo.title}</h3>
               <p className="text-xs text-gray-600 leading-relaxed">{memo.description}</p>
               <button 

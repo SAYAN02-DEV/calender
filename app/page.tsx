@@ -12,15 +12,55 @@ export interface CalendarEvent {
   color: string;
 }
 
+export interface Memo {
+  id: string;
+  month: number;
+  year: number;
+  title: string;
+  description: string;
+  linkedDateStr?: string;
+}
+
 const CalendarGrid: React.FC = () => {
   const currentDate = new Date();
   const [year, setYear] = useState(currentDate.getFullYear());
   const [month, setMonth] = useState(currentDate.getMonth() + 1);
   const [selection, setSelection] = useState<Date[]>([]);
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
-  
+
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+
+  const [memos, setMemos] = useState<Memo[]>([]);
+  const [memosLoaded, setMemosLoaded] = useState(false);
+  const [hoveredLinkedDate, setHoveredLinkedDate] = useState<string | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('monthly_memos_data');
+    if (stored) {
+      try {
+        setMemos(JSON.parse(stored));
+      } catch (e) {
+        console.error('Failed to parse memos', e);
+      }
+    } else {
+      const currentMonth = new Date().getMonth() + 1;
+      const currentYear = new Date().getFullYear();
+      const defaultMemos: Memo[] = [
+        { id: '1', month: currentMonth, year: currentYear, title: 'PRUNING RITUAL', description: 'Begin the light pruning of indoor ferns to encourage spring vitality. Use sterilized tools only.' },
+        { id: '2', month: currentMonth, year: currentYear, title: 'BOTANICAL WORKSHOP', description: 'Seasonal arrangement masterclass focusing on dried winter flora and brass accents.' },
+        { id: '3', month: currentMonth, year: currentYear, title: 'SOIL ANALYSIS', description: 'Check pH levels for the terrace garden. Prepare mineral infusions for the dormant saplings.' },
+      ];
+      setMemos(defaultMemos);
+    }
+    setMemosLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (memosLoaded) {
+      localStorage.setItem('monthly_memos_data', JSON.stringify(memos));
+    }
+  }, [memos, memosLoaded]);
 
   useEffect(() => {
     const stored = localStorage.getItem('calendar_events_data');
@@ -75,56 +115,41 @@ const CalendarGrid: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto my-10 p-6 font-sans">
+    <div className="w-full max-w-6xl mx-auto my-10 p-6 grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 font-sans bg-white">
       
-      {/* Global Month Navigation */}
-      <div className="flex justify-end items-center mb-8 px-2">
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={handlePrevMonth}
-            className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-[#114232] hover:bg-gray-100 transition-colors bg-white shadow-sm"
-            aria-label="Previous Month"
-          >
-            <svg fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-[14px] h-[14px]">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
-          </button>
-          <button 
-            onClick={handleNextMonth}
-            className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-[#114232] hover:bg-gray-100 transition-colors bg-white shadow-sm"
-            aria-label="Next Month"
-          >
-            <svg fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-[14px] h-[14px]">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-            </svg>
-          </button>
-        </div>
+      {/* Left Column: Hero & Memos */}
+      <div className="flex flex-col gap-8 md:col-span-5 md:col-start-1 md:row-start-1">
+        <HeroImage />
+        <MonthlyMemos 
+          month={month} 
+          year={year} 
+          memos={memos}
+          setMemos={setMemos}
+          memosLoaded={memosLoaded}
+          setHoveredLinkedDate={setHoveredLinkedDate}
+        />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 bg-white">
-        {/* Left Column: Hero & Memos */}
-        <div className="flex flex-col gap-8 md:col-span-5 md:col-start-1 md:row-start-1">
-          <HeroImage />
-          <MonthlyMemos month={month} year={year} />
-        </div>
-
-        {/* Calendar Section */}
-        <div className="md:col-span-7 md:col-start-6 md:row-start-1 md:row-span-2 self-start flex flex-col gap-6">
-          <Calendar 
-            year={year}
-            month={month}
-            selection={selection}
-            setSelection={setSelection}
-            hoveredDate={hoveredDate}
-            setHoveredDate={setHoveredDate}
-            mousePos={mousePos}
-            gridRef={gridRef}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-            events={events}
-            setEvents={setEvents}
-          />
-        </div>
+      {/* Calendar Section */}
+      <div className="md:col-span-7 md:col-start-6 md:row-start-1 md:row-span-2 self-start flex flex-col gap-6">
+        <Calendar 
+          year={year}
+          month={month}
+          onNextMonth={handleNextMonth}
+          onPrevMonth={handlePrevMonth}
+          selection={selection}
+          setSelection={setSelection}
+          hoveredDate={hoveredDate}
+          setHoveredDate={setHoveredDate}
+          mousePos={mousePos}
+          gridRef={gridRef}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          events={events}
+          setEvents={setEvents}
+          setMemos={setMemos}
+          hoveredLinkedDate={hoveredLinkedDate}
+        />
       </div>
     </div>
   );
