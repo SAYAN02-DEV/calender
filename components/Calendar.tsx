@@ -354,13 +354,16 @@ const Calendar: React.FC<CalendarProps> = ({
           const cellColor = (activeEventColor || isSel) ? '#ffffff' : !isCurrentMonthDay ? '#d1d1d1' : '#555';
 
           const activeEvent = dayEvent || rangeEvent;
+          
+          const today = new Date();
+          const isToday = date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
 
           return (
             <div 
               key={cellIndex} 
               onClick={() => handleDateClick(date)}
               onMouseEnter={() => setHoveredDate(date)}
-              className={`group flex flex-col justify-center items-center min-h-[70px] p-2 cursor-pointer transition-all duration-300 relative ${isSel ? 'ring-2 ring-offset-2 ring-[#B49B57] z-10 rounded-xl shadow-md' : 'rounded-lg'} ${activeEvent ? 'hover:scale-[1.3] hover:z-50 hover:shadow-2xl' : ''}`}
+              className={`group flex flex-col justify-center items-center min-h-[70px] p-2 cursor-pointer transition-all duration-300 relative ${isSel ? 'ring-2 ring-offset-2 ring-[#B49B57] z-10 rounded-xl shadow-md' : 'rounded-lg'} ${activeEvent ? 'hover:scale-[1.3] hover:z-50 hover:shadow-2xl' : ''} ${isToday ? 'border border-black' : ''}`}
               style={{
                 backgroundColor: cellBackground,
                 color: cellColor,
