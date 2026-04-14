@@ -53,10 +53,7 @@ const CalendarGrid: React.FC = () => {
         console.error('Failed to parse memos', e);
       }
     } else {
-      const currentMonth = new Date().getMonth() + 1;
-      const currentYear = new Date().getFullYear();
-      const defaultMemos: Memo[] = [];
-      setMemos(defaultMemos);
+      setMemos([]);
     }
     setMemosLoaded(true);
   }, []);
@@ -129,15 +126,15 @@ const CalendarGrid: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto my-10 p-6 md:p-10 grid grid-cols-1 md:grid-cols-12 md:grid-rows-[auto_1fr] gap-8 md:gap-x-12 md:gap-y-8 font-sans bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 items-start">
+    <div className="w-full max-w-5xl mx-auto my-4 p-4 md:p-6 grid grid-cols-1 md:grid-cols-12 md:grid-rows-[auto_1fr] gap-4 md:gap-x-6 md:gap-y-4 font-sans bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 items-start">
       
       {/* Hero Image */}
-      <div className="order-1 md:order-none md:col-span-5 md:col-start-1 md:row-start-1">
+      <div className="order-1 md:order-none md:col-span-4 md:col-start-1 md:row-start-1">
         <HeroImage month={month} />
       </div>
 
       {/* Calendar Section */}
-      <div className="order-2 md:order-none md:col-span-7 md:col-start-6 md:row-start-1 md:row-span-2 self-start flex flex-col gap-6">
+      <div className="order-2 md:order-none md:col-span-8 md:col-start-5 md:row-start-1 md:row-span-2 self-start flex flex-col gap-4">
         <Calendar 
           year={year}
           month={month}
@@ -161,7 +158,7 @@ const CalendarGrid: React.FC = () => {
       </div>
 
       {/* Monthly Memos */}
-      <div className="order-3 md:order-none md:col-span-5 md:col-start-1 md:row-start-2 self-start flex flex-col">
+      <div className="order-3 md:order-none md:col-span-4 md:col-start-1 md:row-start-2 self-start flex flex-col">
         <MonthlyMemos 
           month={month} 
           year={year} 
