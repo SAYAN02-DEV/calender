@@ -126,7 +126,7 @@ const CalendarGrid: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto my-4 p-4 md:p-6 grid grid-cols-1 md:grid-cols-12 md:grid-rows-[auto_1fr] gap-4 md:gap-x-6 md:gap-y-4 font-sans bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 items-start">
+    <div className="w-full max-w-3xl mx-auto my-4 p-4 md:p-6 grid grid-cols-1 md:grid-cols-12 md:grid-rows-[auto_1fr] gap-4 md:gap-x-6 md:gap-y-4 font-sans bg-white/70 backdrop-blur-xl rounded-3xl shadow-xl border border-white/20 items-start">
       
       {/* Hero Image */}
       <div className="order-1 md:order-none md:col-span-4 md:col-start-1 md:row-start-1">
